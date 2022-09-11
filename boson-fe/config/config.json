@@ -1,0 +1,14 @@
+{
+  "development": {
+    "dialect": "sqlite",
+    "storage": "boson-dev"
+  },
+  "test": {
+    "dialect": "sqlite",
+    "storage": "boson-test"
+  },
+  "production": {
+    "dialect": "sqlite",
+    "storage": "boson"
+  }
+}
