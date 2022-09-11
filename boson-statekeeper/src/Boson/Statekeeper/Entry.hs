@@ -2,9 +2,10 @@ module Boson.Statekeeper.Entry (run) where
 
 import Boson.Statekeeper.Env
 import Boson.Util.Exception (fromJustOrThrow)
-import qualified Database.SQLite.Simple
+import qualified Database.SQLite.Simple as S
 import RIO
 import RIO.Lens (non)
+import RIO.List.Partial (head)
 import RIO.Process (HasProcessContext, lookupEnvFromContext, mkDefaultProcessContext)
 import RIO.Text (unpack)
 
@@ -28,16 +29,22 @@ run'1 = do
       . setLogMinLevel (tlcLogLevel config)
       <$> logOptionsHandle stderr False
 
-  db <- liftIO $ Database.SQLite.Simple.open $ unpack $ tlcAppConfig config ^. dbPath
+  db <- liftIO $ S.open $ unpack $ tlcAppConfig config ^. dbPath
+  liftIO $ S.withExclusiveTransaction db (pure ())
+
+  (S.Only lastKnownVersion) :: S.Only Text <-
+    fmap head $ liftIO $ S.query_ db "SELECT mv_last_known_version('main')"
 
   withLogFunc logOptions $ \logFunc -> do
     let env = ServiceEnv {seConfig = tlcAppConfig config, seLogFunc = logFunc}
-    runRIO env run'2
+    runRIO env $ do
+      logInfo $ "current database version: " <> display lastKnownVersion
+      run'2
 
 run'2 :: RIO ServiceEnv ()
 run'2 = do
   env <- ask
-  logInfo $ fromString $ unpack $ ("Hello World! DB path: " :: Text) <> env ^. configL . dbPath
+  logInfo $ display $ ("Hello World! DB path: " :: Text) <> env ^. configL . dbPath
 
 instance {-# OVERLAPPING #-} HasEnv ServiceEnv where
   type EnvConfig ServiceEnv = AppConfig
