@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Lib
+import Boson.Statekeeper.Entry (run)
 
 main :: IO ()
-main = someFunc
+main = run

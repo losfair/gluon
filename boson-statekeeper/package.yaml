@@ -1,10 +1,10 @@
 name:                boson-statekeeper
 version:             0.1.0.0
-github:              "githubuser/boson-statekeeper"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2022 Author name here"
+github:              "losfair/boson"
+license:             Apache-2.0
+author:              "Heyang Zhou"
+maintainer:          "heyang.zhou@icloud.com"
+copyright:           "2022 Heyang Zhou"
 
 extra-source-files:
 - README.md
@@ -17,10 +17,14 @@ extra-source-files:
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
 # common to point users to the README.md file.
-description:         Please see the README on GitHub at <https://github.com/githubuser/boson-statekeeper#readme>
+description:         Please see the README on GitHub at <https://github.com/losfair/boson#readme>
 
 dependencies:
 - base >= 4.7 && < 5
+- rio
+- microlens-th
+- sqlite-simple
+- direct-sqlite
 
 ghc-options:
 - -Wall
@@ -35,6 +39,45 @@ ghc-options:
 
 library:
   source-dirs: src
+  # Following rio's advice (https://github.com/commercialhaskell/rio)
+  default-extensions:
+  - BangPatterns
+  - BinaryLiterals
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveDataTypeable
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveTraversable
+  - DoAndIfThenElse
+  - EmptyDataDecls
+  - ExistentialQuantification
+  - FlexibleContexts
+  - FlexibleInstances
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - InstanceSigs
+  - KindSignatures
+  - LambdaCase
+  - MultiParamTypeClasses
+  - MultiWayIf
+  - NamedFieldPuns
+  - NoImplicitPrelude
+  - OverloadedStrings
+  - PartialTypeSignatures
+  - PatternGuards
+  - PolyKinds
+  - RankNTypes
+  - RecordWildCards
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TupleSections
+  - TypeFamilies
+  - TypeSynonymInstances
+  - ViewPatterns
 
 executables:
   boson-statekeeper-exe:

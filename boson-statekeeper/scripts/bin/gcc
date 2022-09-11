@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$EXTRA_INCLUDE_PATH" ]; then
+  /usr/bin/gcc $@
+else
+  /usr/bin/gcc "-I$EXTRA_INCLUDE_PATH" $@
+fi
