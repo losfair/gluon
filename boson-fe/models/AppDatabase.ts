@@ -7,30 +7,21 @@ import { AllowNull, Column, Model, PrimaryKey, Table } from "sequelize-typescrip
 export default class AppDatabase extends Model {
   @PrimaryKey
   @Column(DataTypes.TEXT)
-  projectId: string | undefined;
+  projectId: string;
 
   @PrimaryKey
   @Column(DataTypes.INTEGER)
-  id: number | undefined;
+  id: number;
 
   @Column(DataTypes.INTEGER)
-  version: number | undefined;
+  version: number;
 
   @Column(DataTypes.TEXT)
-  nsKey: number | undefined;
+  nsKey: number;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number | undefined;
+  createdAt: number;
 
   @Column(DataTypes.INTEGER)
-  updatedAt: number | undefined;
+  updatedAt: number;
 }
-
-/*
-  projectId TEXT NOT NULL,
-  id INTEGER NOT NULL,
-  version INTEGER NOT NULL DEFAULT 0,
-  nsKey TEXT NOT NULL,
-  createdAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
-  updatedAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
-*/

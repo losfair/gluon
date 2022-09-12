@@ -4,21 +4,18 @@ import { Column, Model, PrimaryKey, Table } from "sequelize-typescript"
 @Table({
   timestamps: false,
 })
-export default class Machine extends Model {
+export default class ProjectMember extends Model {
   @PrimaryKey
   @Column(DataTypes.TEXT)
   projectId: string;
 
   @PrimaryKey
-  @Column(DataTypes.INTEGER)
-  id: number;
+  @Column(DataTypes.TEXT)
+  userId: string;
 
-  @Column(DataTypes.INTEGER)
-  version: number;
+  @Column(DataTypes.ENUM("owner", "member"))
+  role: string;
 
   @Column(DataTypes.INTEGER)
   createdAt: number;
-
-  @Column(DataTypes.INTEGER)
-  updatedAt: number;
 }

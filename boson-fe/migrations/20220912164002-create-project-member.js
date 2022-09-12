@@ -4,27 +4,22 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.transaction(async transaction => {
       await queryInterface.sequelize.query(`
-CREATE TABLE Projects (
-  id TEXT NOT NULL PRIMARY KEY,
-  name TEXT NOT NULL,
-  lastResourceId INTEGER NOT NULL DEFAULT 0,
+CREATE TABLE ProjectMembers (
+  projectId TEXT NOT NULL,
+  userId TEXT NOT NULL,
+  role TEXT NOT NULL,
   createdAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
-  updatedAt INTEGER NOT NULL DEFAULT (unixepoch('now'))
+  PRIMARY KEY (projectId, userId)
 ) WITHOUT ROWID;
       `, { transaction });
-
       await queryInterface.sequelize.query(`
-CREATE TRIGGER Projects_PostUpdate AFTER UPDATE ON Projects
-FOR EACH ROW BEGIN
-  UPDATE Projects SET updatedAt = unixepoch('now')
-    WHERE id = old.id;
-END;
+CREATE INDEX ProjectMembers_userId ON ProjectMembers (userId);
       `, { transaction });
     });
     
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Projects');
+    await queryInterface.dropTable('ProjectMembers');
   }
 };
