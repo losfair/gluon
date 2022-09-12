@@ -21,7 +21,7 @@ END;
 CREATE TRIGGER AppDatabase_Delete_To_Mutation AFTER DELETE ON AppDatabases
 FOR EACH ROW BEGIN
   INSERT OR IGNORE INTO Mutations (projectId, resourceId, version, resourceKind, operation, info)
-    VALUES(old.projectId, old.id, old.version + 1, 'AppDatabase', 'delete', '{}');
+    VALUES(old.projectId, old.id, old.version + 1, 'AppDatabase', 'delete', json_insert('{}', '$.nsKey', old.nsKey));
 END;
       `, { transaction });
     });

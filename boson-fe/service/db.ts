@@ -1,3 +1,4 @@
+import { Transaction } from "sequelize";
 import { Sequelize } from "sequelize-typescript";
 import * as models from "../models";
 export * as models from "../models";
@@ -12,3 +13,16 @@ export const sequelize = new Sequelize("", "", "", {
   storage: BOSON_DB,
   models: Object.values(models),
 });
+
+export async function retryableTxn<T>(fn: (txn: Transaction) => Promise<T>): Promise<T> {
+  while (true) {
+    try {
+      return await sequelize.transaction((t) => {
+        return fn(t);
+      });
+    } catch (e) {
+      // TODO: Check lock error
+      throw e;
+    }
+  }
+}
