@@ -12,17 +12,40 @@ export const sequelize = new Sequelize("", "", "", {
   dialect: 'sqlite',
   storage: BOSON_DB,
   models: Object.values(models),
+  retry: { max: 0 }, // makes no sense to retry with mvsqlite
 });
 
 export async function retryableTxn<T>(fn: (txn: Transaction) => Promise<T>): Promise<T> {
   while (true) {
+    const txn = await sequelize.transaction();
+    let ret: T;
     try {
-      return await sequelize.transaction((t) => {
-        return fn(t);
-      });
+      ret = await fn(txn);
     } catch (e) {
-      // TODO: Check lock error
+      await txn.rollback();
       throw e;
     }
+
+    const recoverAndCommit = async () => {
+      await sequelize.query("BEGIN DEFERRED TRANSACTION", { transaction: txn });
+      await txn.commit();
+    };
+
+    // HACK
+    try {
+      await sequelize.query("COMMIT", { transaction: txn });
+    } catch (e: any) {
+      if (e.name === "SequelizeTimeoutError" && e.parent?.code === "SQLITE_BUSY") {
+        console.warn("retryableTxn: got SQLITE_BUSY, retrying");
+        await txn.rollback();
+        continue;
+      } else {
+        await recoverAndCommit();
+        throw e;
+      }
+    }
+
+    await recoverAndCommit();
+    return ret;
   }
 }
