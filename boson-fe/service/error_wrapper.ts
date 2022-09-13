@@ -16,6 +16,20 @@ export class MissingTokenError extends Error {
   }
 }
 
+export class ResourceNotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ResourceNotFoundError";
+  }
+}
+
+export class LimitExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LimitExceededError";
+  }
+}
+
 export function checkProp<T>(dataName: string, data: unknown, check: (x: unknown) => x is T): T {
   if (!check(data)) {
     throw new PropCheckError("data does not have the expected property: " + dataName);
@@ -60,6 +74,20 @@ export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
           error: "auth_error",
           message: e.message,
         })
+      }
+
+      if (e instanceof ResourceNotFoundError) {
+        return res.status(404).json({
+          error: "resource_not_found",
+          message: e.message,
+        });
+      }
+
+      if (e instanceof LimitExceededError) {
+        return res.status(400).json({
+          error: "limit_exceeded_error",
+          message: e.message,
+        });
       }
 
       throw e;

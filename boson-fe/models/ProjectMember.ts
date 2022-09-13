@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
-import { Column, Model, PrimaryKey, Table } from "sequelize-typescript"
+import { Column, HasOne, Model, PrimaryKey, Table } from "sequelize-typescript"
+import Project from "./Project";
 
 @Table({
   timestamps: false,

@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
-import { AllowNull, Column, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
+import { AllowNull, BelongsToMany, Column, HasMany, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
+import ProjectMember from "./ProjectMember";
 
 @Table({
   timestamps: false,
@@ -10,7 +11,7 @@ export default class Project extends Model {
   id: string;
 
   @IsLowercase
-  @Length({min: 4, max: 100})
+  @Length({ min: 4, max: 100 })
   @Column
   name: string;
 
