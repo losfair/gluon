@@ -7,7 +7,7 @@ import type { Project } from "../models";
 import { useRecoilRefresher_UNSTABLE, useRecoilValue } from "recoil";
 import { projectListQuery } from "../feutil/state";
 import React from "react";
-import { Container, Text } from "@nextui-org/react";
+import { Container, Loading, Row, Spacer, Text } from "@nextui-org/react";
 
 export function RequireProject({ children }: { children: React.ReactNode }) {
   return (
@@ -19,13 +19,16 @@ export function RequireProject({ children }: { children: React.ReactNode }) {
   )
 }
 
+// There can be at most one project created, globally.
+let firstProjectCreated = false;
 
 function RequireProjectInner({ children }: { children: React.ReactNode }) {
   const projectList = useRecoilValue(projectListQuery);
   const refresh = useRecoilRefresher_UNSTABLE(projectListQuery);
 
   useAsync(async () => {
-    if (projectList.length === 0) {
+    if (projectList.length === 0 && !firstProjectCreated) {
+      firstProjectCreated = true;
       await loadJson("/api/project/create", { name: "personal-project" });
       refresh();
     }
@@ -40,8 +43,12 @@ function RequireProjectInner({ children }: { children: React.ReactNode }) {
 
 function ProjectInit({ message }: { message: string }) {
   return (
-    <Container>
-      <Text>{message}</Text>
+    <Container xs css={{ pt: 80 }}>
+      <Row align="center" justify="center">
+        <Loading type="spinner" size="lg"></Loading>
+        <Spacer css={{ w: 16 }} />
+        <Text color="primary">{message}</Text>
+      </Row>
     </Container>
   )
 }

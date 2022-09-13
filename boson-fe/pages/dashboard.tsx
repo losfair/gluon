@@ -3,11 +3,14 @@ import loading from '@nextui-org/react/types/loading'
 import type { NextPage } from 'next'
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
+import { useRecoilValue, useRecoilValueLoadable } from 'recoil'
 import { RequireAuth } from '../components/require_auth'
 import { RequireProject } from '../components/require_project'
+import { firstProjectSelector } from '../feutil/state'
 
 const Dashboard: NextPage = () => {
   const { data: session, status } = useSession();
+  const project = useRecoilValueLoadable(firstProjectSelector);
 
   return (
     <RequireAuth>
@@ -30,6 +33,9 @@ const Dashboard: NextPage = () => {
                 </Card>
               </Row>
             )}
+            {project.state === "hasValue" && <>
+              <pre>{JSON.stringify(project.contents!, null, 2)}</pre>
+            </>}
           </Col>
         </Container>
       </RequireProject>
