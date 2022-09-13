@@ -27,6 +27,8 @@ library
   exposed-modules:
       Boson.Statekeeper.Entry
       Boson.Statekeeper.Env
+      Boson.Statekeeper.ProjectWorker.Manager
+      Boson.Statekeeper.ProjectWorker.Worker
       Boson.Util.Exception
   other-modules:
       Paths_boson_statekeeper
@@ -73,6 +75,7 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , clock
     , direct-sqlite
     , microlens-th
     , rio
@@ -89,6 +92,7 @@ executable boson-statekeeper-exe
   build-depends:
       base >=4.7 && <5
     , boson-statekeeper
+    , clock
     , direct-sqlite
     , microlens-th
     , rio
@@ -106,6 +110,7 @@ test-suite boson-statekeeper-test
   build-depends:
       base >=4.7 && <5
     , boson-statekeeper
+    , clock
     , direct-sqlite
     , microlens-th
     , rio

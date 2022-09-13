@@ -7,6 +7,10 @@ module Boson.Statekeeper.Env
     HasConfig (..),
     AppConfig (..),
     FlyConfig (..),
+    GenericEnv (..),
+    geConfig,
+    geLogFunc,
+    geDbOpener,
     dbPath,
     flyConfig,
     flyMachineApiHostname,
@@ -14,35 +18,44 @@ module Boson.Statekeeper.Env
   )
 where
 
+import qualified Database.SQLite.Simple as S
 import Lens.Micro.TH
 import RIO
 
-class HasEnv a where
-  type EnvConfig a
-  configL :: Lens' a (EnvConfig a)
-  logFuncL :: Lens' a LogFunc
-
-instance (HasEnv a, HasConfig (EnvConfig a)) => HasConfig a where
-  appConfigL = configL . appConfigL
-
-instance HasEnv a => HasLogFunc a where
-  logFuncL = Boson.Statekeeper.Env.logFuncL
-
-class HasConfig a where
-  appConfigL :: Lens' a AppConfig
+data GenericEnv = GenericEnv
+  { _geConfig :: AppConfig,
+    _geLogFunc :: LogFunc,
+    _geDbOpener :: forall env. RIO env S.Connection
+  }
 
 data AppConfig = AppConfig
   { _dbPath :: Text,
     _flyConfig :: FlyConfig
   }
 
-instance HasConfig AppConfig where
-  appConfigL = id
-
 data FlyConfig = FlyConfig
   { _flyMachineApiHostname :: Text,
     _flyMachineApiToken :: Text
   }
 
+makeLenses ''GenericEnv
 makeLenses ''AppConfig
 makeLenses ''FlyConfig
+
+class HasLogFunc a => HasEnv a where
+  envL :: Lens' a GenericEnv
+
+class HasConfig a where
+  appConfigL :: Lens' a AppConfig
+
+instance HasEnv GenericEnv where
+  envL = id
+
+instance HasEnv a => HasConfig a where
+  appConfigL = envL . geConfig . appConfigL
+
+instance {-# OVERLAPPING #-} HasConfig AppConfig where
+  appConfigL = id
+
+instance HasEnv a => HasLogFunc a where
+  logFuncL = envL . geLogFunc

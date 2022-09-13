@@ -1,6 +1,7 @@
 module Boson.Statekeeper.Entry (run) where
 
 import Boson.Statekeeper.Env
+import qualified Boson.Statekeeper.ProjectWorker.Manager as Manager
 import Boson.Util.Exception (fromJustOrThrow)
 import qualified Database.SQLite.Simple as S
 import RIO
@@ -10,8 +11,6 @@ import RIO.Process (HasProcessContext, lookupEnvFromContext, mkDefaultProcessCon
 import RIO.Text (unpack)
 
 data TopLevelConfig = TopLevelConfig {tlcAppConfig :: AppConfig, tlcLogLevel :: LogLevel}
-
-data ServiceEnv = ServiceEnv {seConfig :: AppConfig, seLogFunc :: LogFunc}
 
 run :: IO ()
 run = do
@@ -29,27 +28,23 @@ run'1 = do
       . setLogMinLevel (tlcLogLevel config)
       <$> logOptionsHandle stderr False
 
-  db <- liftIO $ S.open $ unpack $ tlcAppConfig config ^. dbPath
-  liftIO $ S.withExclusiveTransaction db (pure ())
-
-  (S.Only lastKnownVersion) :: S.Only Text <-
-    fmap head $ liftIO $ S.query_ db "SELECT mv_last_known_version('main')"
-
   withLogFunc logOptions $ \logFunc -> do
-    let env = ServiceEnv {seConfig = tlcAppConfig config, seLogFunc = logFunc}
-    runRIO env $ do
-      logInfo $ "current database version: " <> display lastKnownVersion
-      run'2
+    let env = GenericEnv {_geConfig = tlcAppConfig config, _geLogFunc = logFunc, _geDbOpener = liftIO $ S.open $ unpack $ tlcAppConfig config ^. dbPath}
+    runRIO env run'2
 
-run'2 :: RIO ServiceEnv ()
+run'2 :: HasEnv env => RIO env ()
 run'2 = do
-  env <- ask
-  logInfo $ display $ ("Hello World! DB path: " :: Text) <> env ^. configL . dbPath
+  checkDatabase
+  Manager.run
 
-instance {-# OVERLAPPING #-} HasEnv ServiceEnv where
-  type EnvConfig ServiceEnv = AppConfig
-  configL = lens seConfig (\x y -> x {seConfig = y})
-  logFuncL = lens seLogFunc (\x y -> x {seLogFunc = y})
+checkDatabase :: HasEnv env => RIO env ()
+checkDatabase = do
+  env <- ask
+  bracket (env ^. envL . geDbOpener) (liftIO . S.close) $ \db -> do
+    liftIO $ S.withExclusiveTransaction db (pure ())
+    (S.Only lastKnownVersion) :: S.Only Text <-
+      fmap head $ liftIO $ S.query_ db "SELECT mv_last_known_version('main')"
+    logInfo $ "current database version: " <> display lastKnownVersion
 
 resolveConfig :: HasProcessContext env => RIO env TopLevelConfig
 resolveConfig = do

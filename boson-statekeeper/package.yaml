@@ -25,6 +25,7 @@ dependencies:
 - microlens-th
 - sqlite-simple
 - direct-sqlite
+- clock
 
 ghc-options:
 - -Wall
