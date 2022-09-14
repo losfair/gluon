@@ -18,7 +18,7 @@ CREATE TABLE AppDatabases (
       await queryInterface.sequelize.query(`
 CREATE TRIGGER AppDatabases_PostUpdate AFTER UPDATE ON AppDatabases
 FOR EACH ROW BEGIN
-  UPDATE AppDatabases SET updatedAt = unixepoch('now'), version = old.version + 1
+  UPDATE AppDatabases SET updatedAt = unixepoch('now')
     WHERE projectId = old.projectId AND id = old.id;
 END;
       `, { transaction });

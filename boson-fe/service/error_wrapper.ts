@@ -1,11 +1,15 @@
 import { NextApiHandler, NextApiRequest } from "next";
 import { getToken, JWT } from "next-auth/jwt";
-import { ValidationError } from "sequelize";
+import { Transaction, ValidationError } from "sequelize";
+import * as models from "../models";
 
 export class PropCheckError extends Error {
-  constructor(message: string) {
+  details: any;
+
+  constructor(message: string, details: any = {}) {
     super(message);
     this.name = "PropCheckError";
+    this.details = details;
   }
 }
 
@@ -30,15 +34,28 @@ export class LimitExceededError extends Error {
   }
 }
 
+export class PermissionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PermissionError";
+  }
+}
+
 export function checkProp<T>(dataName: string, data: unknown, check: (x: unknown) => x is T): T {
   if (!check(data)) {
-    throw new PropCheckError("data does not have the expected property: " + dataName);
+    throw new PropCheckError("data does not have the expected property: " + dataName, {
+      errors: (check as any).errors || [],
+    });
   }
   return data;
 }
 
 export function checkProp_IsString(dataName: string, data: unknown): string {
   return checkProp(dataName, data, (x): x is string => typeof x === "string");
+}
+
+export function checkProp_IsSafeInteger(dataName: string, data: unknown): number {
+  return checkProp(dataName, data, (x): x is number => typeof x === "number" && Number.isSafeInteger(x));
 }
 
 export async function mustGetToken(req: NextApiRequest): Promise<JWT & { uid: string }> {
@@ -48,6 +65,27 @@ export async function mustGetToken(req: NextApiRequest): Promise<JWT & { uid: st
   }
 
   return token as any;
+}
+
+export async function getAndVerifyProjectPermissions(req: NextApiRequest, transaction: Transaction): Promise<{ userId: string, projectId: string }> {
+  const { uid: userId } = await mustGetToken(req);
+  const projectId = checkProp_IsString("projectId", req.body.projectId);
+
+  const membership = await models.ProjectMember.findOne({
+    where: {
+      projectId,
+      userId,
+    },
+    transaction,
+  });
+  if (!membership) {
+    throw new PermissionError("you are not a member of this project");
+  }
+
+  return {
+    userId,
+    projectId,
+  }
 }
 
 export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
@@ -64,8 +102,9 @@ export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
 
       if (e instanceof PropCheckError) {
         return res.status(400).json({
-          error: "validation_error",
+          error: "prop_check_error",
           message: e.message,
+          details: e.details,
         })
       }
 
@@ -86,6 +125,13 @@ export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
       if (e instanceof LimitExceededError) {
         return res.status(400).json({
           error: "limit_exceeded_error",
+          message: e.message,
+        });
+      }
+
+      if (e instanceof PermissionError) {
+        return res.status(403).json({
+          error: "permission_error",
           message: e.message,
         });
       }

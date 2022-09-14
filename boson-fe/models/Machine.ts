@@ -1,3 +1,4 @@
+import { JSONSchemaType } from "ajv"
 import { DataTypes } from "sequelize";
 import { Column, Model, PrimaryKey, Table } from "sequelize-typescript"
 
@@ -16,9 +17,28 @@ export default class Machine extends Model {
   @Column(DataTypes.INTEGER)
   version: number;
 
+  @Column(DataTypes.TEXT)
+  name: string;
+
+  @Column(DataTypes.JSON)
+  config: MachineConfig;
+
   @Column(DataTypes.INTEGER)
   createdAt: number;
 
   @Column(DataTypes.INTEGER)
   updatedAt: number;
 }
+
+export interface MachineConfig {
+  image: string;
+}
+
+export const MachineConfig_schema: JSONSchemaType<MachineConfig> = {
+  type: "object",
+  properties: {
+    image: { type: "string" },
+  },
+  required: ["image"],
+  additionalProperties: false,
+};
