@@ -8,6 +8,7 @@ module Boson.Statekeeper.Env
     AppConfig (..),
     FlyConfig (..),
     GenericEnv (..),
+    HasLogTaskSource (..),
     geConfig,
     geLogFunc,
     geDbOpener,
@@ -47,6 +48,9 @@ class HasLogFunc a => HasEnv a where
 
 class HasConfig a where
   appConfigL :: Lens' a AppConfig
+
+class HasLogTaskSource a where
+  logTaskSource :: a -> Text
 
 instance HasEnv GenericEnv where
   envL = id

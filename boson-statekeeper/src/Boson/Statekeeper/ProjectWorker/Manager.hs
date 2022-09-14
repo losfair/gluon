@@ -4,6 +4,7 @@ module Boson.Statekeeper.ProjectWorker.Manager (run) where
 
 import Boson.Statekeeper.Env
 import Boson.Statekeeper.ProjectWorker.Worker
+import Boson.Util.Time (diffTimeMillis)
 import qualified Database.SQLite.Simple as S
 import Lens.Micro.TH (makeLenses)
 import RIO
@@ -11,7 +12,7 @@ import qualified RIO.Map
 import qualified RIO.Set
 import RIO.State (MonadState (get, put))
 import qualified RIO.Text
-import System.Clock (Clock (Monotonic), diffTimeSpec, getTime, toNanoSecs)
+import System.Clock (Clock (Monotonic), getTime)
 
 data LocalEnv = LocalEnv
   { _leState :: SomeRef LocalState,
@@ -82,9 +83,16 @@ runOnce db = do
     mapM
       ( \projectId -> do
           logInfoS logSource $ display $ RIO.Text.concat ["starting worker ", projectId]
-          let workerEnv = WorkerEnv {_weEnv = outerEnv, _weProjectId = projectId}
-          task <- runRIO workerEnv $ async runWorker
-          pure $ (projectId, Worker {_wTask = task})
+          let workerEnv = WorkerEnv {_weEnv = outerEnv, _weProjectId = projectId, _weMutationAnnotation = Nothing}
+          task <- runRIO workerEnv $
+            async $ do
+              output <- tryAny runWorker
+              case output of
+                Left e -> do
+                  logErrorS logSource $ display $ RIO.Text.concat ["worker ", projectId, " crashed: ", RIO.Text.pack $ show e]
+                Right () -> do
+                  return ()
+          pure (projectId, Worker {_wTask = task})
       )
       (RIO.Set.toList addedIds)
 
@@ -97,8 +105,7 @@ runOnce db = do
   endTime <- liftIO $ getTime Monotonic
   if not (null removedIds && null addedIds)
     then do
-      let micros = toNanoSecs (diffTimeSpec endTime startTime) `div` 1000
-      let millis = (fromInteger micros :: Double) / 1000
+      let millis = diffTimeMillis endTime startTime
       logInfoS logSource $ display $ RIO.Text.concat ["finished handling project changes in ", RIO.Text.pack $ show millis, " ms"]
     else pure ()
 

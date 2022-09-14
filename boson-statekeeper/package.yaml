@@ -26,6 +26,10 @@ dependencies:
 - sqlite-simple
 - direct-sqlite
 - clock
+- cryptonite
+- binary
+- req
+- aeson
 
 ghc-options:
 - -Wall
