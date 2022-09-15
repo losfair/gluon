@@ -32,12 +32,32 @@ export default class Machine extends Model {
 
 export interface MachineConfig {
   image: string;
+  env?: Record<string, string> | null;
+  guest?: {
+    cpus: number;
+    memory_mb: number;
+  } | null;
 }
 
 export const MachineConfig_schema: JSONSchemaType<MachineConfig> = {
   type: "object",
   properties: {
     image: { type: "string" },
+    env: {
+      type: "object",
+      additionalProperties: { type: "string" },
+      required: [],
+      nullable: true,
+    },
+    guest: {
+      type: "object",
+      properties: {
+        cpus: { type: "integer" },
+        memory_mb: { type: "integer" },
+      },
+      required: ["cpus", "memory_mb"],
+      nullable: true,
+    },
   },
   required: ["image"],
   additionalProperties: false,

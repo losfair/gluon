@@ -4,13 +4,12 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.sequelize.transaction(async transaction => {
       await queryInterface.sequelize.query(`
-CREATE TABLE Machines (
+CREATE TABLE Apps (
   projectId TEXT NOT NULL,
   id INTEGER NOT NULL,
-  version INTEGER NOT NULL DEFAULT 0,
   name TEXT NOT NULL,
+  spec JSON NOT NULL,
   config JSON NOT NULL,
-  flyId TEXT,
   createdAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
   updatedAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
   PRIMARY KEY (projectId, id)
@@ -18,17 +17,17 @@ CREATE TABLE Machines (
       `, { transaction });
 
       await queryInterface.sequelize.query(`
-CREATE TRIGGER Machines_PostUpdate AFTER UPDATE ON Machines
+CREATE TRIGGER Apps_PostUpdate AFTER UPDATE ON Apps
 FOR EACH ROW BEGIN
-  UPDATE Machines SET updatedAt = unixepoch('now')
+  UPDATE Apps SET updatedAt = unixepoch('now')
     WHERE projectId = old.projectId AND id = old.id;
 END;
       `, { transaction });
     });
-    
+
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Machines');
+    await queryInterface.dropTable('Apps');
   }
 };

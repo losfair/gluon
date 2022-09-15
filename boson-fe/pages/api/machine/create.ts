@@ -25,6 +25,7 @@ async function handler(
 
     const machineWithThisName = await models.Machine.findOne({
       where: {
+        projectId,
         name,
       },
       transaction,
