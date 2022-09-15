@@ -3,11 +3,12 @@
 module Boson.Statekeeper.ProjectWorker.Worker (WorkerEnv (..), weEnv, weProjectId, runWorker) where
 
 import Boson.Statekeeper.Env
+import Boson.Statekeeper.Fly.Machine (MachineConfig, miId, spinDown, spinUp)
 import Boson.Util.Database (retryableTxn)
 import Boson.Util.Delay (DelayConfig (DelayConfig), newDelayGenerator, runDelay)
 import Boson.Util.Time (diffTimeMillis)
+import qualified Data.Aeson as A
 import qualified Database.SQLite.Simple as S
-import GHC.IO.Exception (userError)
 import Lens.Micro.TH (makeLenses)
 import RIO
 import RIO.List (headMaybe)
@@ -15,7 +16,6 @@ import qualified RIO.Set
 import qualified RIO.Text
 import qualified RIO.Text as Text
 import System.Clock (Clock (Monotonic), getTime)
-import Network.HTTP.Req
 
 data WorkerEnv = WorkerEnv
   { _weEnv :: GenericEnv,
@@ -150,10 +150,11 @@ mutateMachine db snapshot mut = do
   let op = mut ^. mutOperation
   let projectId = env ^. weProjectId
   let appConfig = env ^. appConfigL
+  let machineName = "m:" <> projectId <> ":" <> Text.pack (show $ mut ^. mutResourceId)
 
   case op of
     "delete" -> do
-      pure ()
+      spinDown (appConfig ^. flyConfig) machineName
     _ -> do
       maybeMachineConfig :: Maybe (S.Only Text) <-
         liftIO $
@@ -167,4 +168,21 @@ mutateMachine db snapshot mut = do
           logInfoS (logTaskSource env) "mutation outdated, skipping"
         Just (S.Only config) -> do
           logInfoS (logTaskSource env) $ display $ Text.concat ["machine config: ", config]
+          case op of
+            "create" -> do
+              logInfoS (logTaskSource env) $ "creating machine " <> display machineName
+              case A.eitherDecodeStrict' (Text.encodeUtf8 config) of
+                Left err -> do
+                  logErrorS (logTaskSource env) $ display $ Text.concat ["failed to decode machine config: ", Text.pack err]
+                Right (mc :: MachineConfig) -> do
+                  machine <- spinUp (appConfig ^. flyConfig) machineName mc
+                  retryableTxn db $ do
+                    liftIO $
+                      S.execute
+                        db
+                        "UPDATE Machines SET flyId = ? WHERE projectId = ? AND id = ?"
+                        (machine ^. miId, projectId, mut ^. mutResourceId)
+                  pure ()
+            _ -> do
+              logErrorS (logTaskSource env) $ display $ Text.concat ["unknown operation: ", op]
       pure ()

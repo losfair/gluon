@@ -27,11 +27,13 @@ library
   exposed-modules:
       Boson.Statekeeper.Entry
       Boson.Statekeeper.Env
+      Boson.Statekeeper.Fly.Machine
       Boson.Statekeeper.ProjectWorker.Manager
       Boson.Statekeeper.ProjectWorker.Worker
       Boson.Util.Database
       Boson.Util.Delay
       Boson.Util.Exception
+      Boson.Util.Http
       Boson.Util.Time
   other-modules:
       Paths_boson_statekeeper
@@ -83,10 +85,13 @@ library
     , clock
     , cryptonite
     , direct-sqlite
+    , http-client
+    , http-types
     , microlens-th
     , req
     , rio
     , sqlite-simple
+    , text
   default-language: Haskell2010
 
 executable boson-statekeeper-exe
@@ -104,10 +109,13 @@ executable boson-statekeeper-exe
     , clock
     , cryptonite
     , direct-sqlite
+    , http-client
+    , http-types
     , microlens-th
     , req
     , rio
     , sqlite-simple
+    , text
   default-language: Haskell2010
 
 test-suite boson-statekeeper-test
@@ -126,8 +134,11 @@ test-suite boson-statekeeper-test
     , clock
     , cryptonite
     , direct-sqlite
+    , http-client
+    , http-types
     , microlens-th
     , req
     , rio
     , sqlite-simple
+    , text
   default-language: Haskell2010

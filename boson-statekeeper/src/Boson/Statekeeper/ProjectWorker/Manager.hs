@@ -58,11 +58,11 @@ run = do
 runOnce :: S.Connection -> RIO LocalEnv ()
 runOnce db = do
   startTime <- liftIO $ getTime Monotonic
-  projectList :: [(Text, Text)] <- liftIO $ S.query_ db "SELECT id, name FROM Projects"
+  projectList :: [S.Only Text] <- liftIO $ S.query_ db "SELECT id FROM Projects UNION SELECT DISTINCT projectId as id from Mutations"
   outerEnv <- (^. leEnv) <$> ask
   st <- get
   let oldProjectIds = RIO.Map.keysSet $ st ^. lsWorkers
-  let newProjectIds = RIO.Set.fromList $ map fst projectList
+  let newProjectIds = RIO.Set.fromList $ map (\(S.Only x) -> x) projectList
 
   let removedIds = RIO.Set.difference oldProjectIds newProjectIds
   let addedIds = RIO.Set.difference newProjectIds oldProjectIds

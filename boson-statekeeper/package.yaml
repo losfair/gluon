@@ -30,6 +30,9 @@ dependencies:
 - binary
 - req
 - aeson
+- http-client
+- text
+- http-types
 
 ghc-options:
 - -Wall

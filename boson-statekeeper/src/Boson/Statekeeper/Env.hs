@@ -15,7 +15,9 @@ module Boson.Statekeeper.Env
     dbPath,
     flyConfig,
     flyMachineApiHostname,
+    flyMachineApiPort,
     flyMachineApiToken,
+    flyMachineAppName,
   )
 where
 
@@ -36,7 +38,9 @@ data AppConfig = AppConfig
 
 data FlyConfig = FlyConfig
   { _flyMachineApiHostname :: Text,
-    _flyMachineApiToken :: Text
+    _flyMachineApiPort :: Int,
+    _flyMachineApiToken :: Text,
+    _flyMachineAppName :: Text
   }
 
 makeLenses ''GenericEnv

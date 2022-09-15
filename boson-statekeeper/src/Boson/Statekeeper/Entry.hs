@@ -3,6 +3,7 @@ module Boson.Statekeeper.Entry (run) where
 import Boson.Statekeeper.Env
 import qualified Boson.Statekeeper.ProjectWorker.Manager as Manager
 import Boson.Util.Exception (fromJustOrThrow)
+import Data.Text.Read (decimal)
 import qualified Database.SQLite.Simple as S
 import RIO
 import RIO.Lens (non)
@@ -48,18 +49,24 @@ checkDatabase = do
 
 resolveConfig :: HasProcessContext env => RIO env TopLevelConfig
 resolveConfig = do
-  dbPath_ <- lookupEnvFromContext "BOSON_DB" >>= fromJustOrThrow "BOSON_DB is not set"
-  flyMachineApiHostname_ <- lookupEnvFromContext "FLY_MACHINE_API_HOSTNAME" >>= fromJustOrThrow "FLY_MACHINE_API_HOSTNAME is not set"
-  flyMachineApiToken_ <- lookupEnvFromContext "FLY_MACHINE_API_TOKEN" >>= fromJustOrThrow "FLY_MACHINE_API_TOKEN is not set"
+  !dbPath_ <- lookupEnvFromContext "BOSON_DB" >>= fromJustOrThrow "BOSON_DB is not set"
+  !flyMachineApiHostname_ <- lookupEnvFromContext "FLY_MACHINE_API_HOSTNAME" >>= fromJustOrThrow "FLY_MACHINE_API_HOSTNAME is not set"
+  !(flyMachineApiPort_ :: Int) <-
+    lookupEnvFromContext "FLY_MACHINE_API_PORT"
+      & fmap (fst . (fromRight (error "invalid FLY_MACHINE_API_PORT") . decimal) . fromMaybe "4280")
+  !flyMachineApiToken_ <- lookupEnvFromContext "FLY_MACHINE_API_TOKEN" >>= fromJustOrThrow "FLY_MACHINE_API_TOKEN is not set"
+  !flyMachineAppName_ <- lookupEnvFromContext "FLY_MACHINE_APP_NAME" >>= fromJustOrThrow "FLY_MACHINE_APP_NAME is not set"
   logLevelStr <- (^. non "LevelInfo") <$> lookupEnvFromContext "BOSON_LOG_LEVEL"
-  logLevel_ :: LogLevel <- fromJustOrThrow ("Invalid log level: " <> logLevelStr) $ readMaybe $ unpack logLevelStr
+  !(logLevel_ :: LogLevel) <- fromJustOrThrow ("Invalid log level: " <> logLevelStr) $ readMaybe $ unpack logLevelStr
   let appConfig =
         AppConfig
           { _dbPath = dbPath_,
             _flyConfig =
               FlyConfig
                 { _flyMachineApiHostname = flyMachineApiHostname_,
-                  _flyMachineApiToken = flyMachineApiToken_
+                  _flyMachineApiPort = flyMachineApiPort_,
+                  _flyMachineApiToken = flyMachineApiToken_,
+                  _flyMachineAppName = flyMachineAppName_
                 }
           }
   pure
