@@ -24,6 +24,9 @@ async function handler(
     maxContentLength: 100 * 1024,
     timeout: 5000,
     responseType: "text",
+    headers: {
+      "User-Agent": "Boson (specproxy)",
+    }
   });
 
   let decoded: unknown;

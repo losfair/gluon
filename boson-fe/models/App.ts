@@ -1,6 +1,6 @@
 import { JSONSchemaType } from "ajv";
 import { DataTypes } from "sequelize";
-import { AllowNull, Column, Model, PrimaryKey, Table } from "sequelize-typescript"
+import { AllowNull, Column, IsLowercase, Length, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
   timestamps: false,
@@ -14,6 +14,8 @@ export default class App extends Model {
   @Column(DataTypes.INTEGER)
   id: number;
 
+  @IsLowercase
+  @Length({ min: 4, max: 100 })
   @Column(DataTypes.TEXT)
   name: string;
 
@@ -37,6 +39,7 @@ export interface AppSpec {
     description?: string | null;
     default?: string | null;
     required?: boolean | null;
+    regex?: string | null;
     type?: "text" | "switch" | "secret" | null;
   }> | null;
   s3?: Record<string, {
@@ -60,6 +63,7 @@ export const AppSpec_schema: JSONSchemaType<AppSpec> = {
           description: { type: "string", nullable: true },
           default: { type: "string", nullable: true },
           required: { type: "boolean", nullable: true },
+          regex: { type: "string", nullable: true },
           type: { type: "string", enum: ["text", "switch", "secret"], nullable: true },
         },
         additionalProperties: false,
@@ -97,7 +101,7 @@ export interface AppConfig {
 export const AppConfig_schema: JSONSchemaType<AppConfig> = {
   type: "object",
   properties: {
-    cpus: { type: "number" },
+    cpus: { type: "integer" },
     memoryMB: { type: "integer" },
     env: {
       type: "object",

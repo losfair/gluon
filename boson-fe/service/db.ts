@@ -9,7 +9,7 @@ if (!BOSON_DB) {
 }
 
 export const sequelize = new Sequelize("", "", "", {
-  dialect: 'sqlite',
+  dialect: "sqlite",
   storage: BOSON_DB,
   models: Object.values(models),
   retry: { max: 0 }, // makes no sense to retry with mvsqlite

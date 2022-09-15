@@ -3,7 +3,7 @@ import { AppConfig, AppSpec } from "../../models/App";
 import { MachineConfig } from "../../models/Machine";
 import { models } from "../db";
 import { allocateResourceId } from "../db_operations";
-import { LimitExceededError } from "../error_wrapper";
+import { LimitExceededError, PropCheckError } from "../error_wrapper";
 
 const allowedMemorySizes = [256, 512, 1024];
 
@@ -20,6 +20,31 @@ export class AppProvisioner {
       throw new LimitExceededError("memory size must be one of " + allowedMemorySizes.join(", "));
     }
 
+    const machineEnv: Record<string, string> = { ...config.env || {} };
+    for (const [envKey, envSpec] of Object.entries(spec.env || {})) {
+      const isSet = machineEnv[envKey] === "string";
+
+      if (envSpec.required && !isSet) {
+        throw new PropCheckError(`missing required env var '${envKey}'`);
+      }
+
+      if (isSet && typeof envSpec.regex === "string") {
+        try {
+          const regex = new RegExp(envSpec.regex);
+          if (!regex.test(machineEnv[envKey])) {
+            throw new PropCheckError(`env var '${envKey}' does not match regex: ${envSpec.regex}`);
+          }
+        } catch (e) {
+          throw new PropCheckError(`env var '${envKey}' has invalid regex: ${envSpec.regex}`);
+        }
+      }
+
+      // This is the last step. Skip regex validation for the default value.
+      if (!isSet && typeof envSpec.default === "string") {
+        machineEnv[envKey] = envSpec.default;
+      }
+    }
+
     const app = await models.App.create({
       projectId: this.projectId,
       id: await allocateResourceId(this.transaction, this.projectId),
@@ -30,7 +55,7 @@ export class AppProvisioner {
 
     const machineConfig: MachineConfig = {
       image: spec.image,
-      env: config.env,
+      env: machineEnv,
       guest: {
         cpus: config.cpus,
         memory_mb: config.memoryMB,
@@ -40,7 +65,7 @@ export class AppProvisioner {
     const machine = await models.Machine.create({
       projectId: this.projectId,
       id: await allocateResourceId(this.transaction, this.projectId),
-      name: "auto-" + name,
+      name: "app-" + app.id,
       config: machineConfig,
     }, { transaction: this.transaction });
 
@@ -61,14 +86,14 @@ export class AppProvisioner {
   }
 
   async deleteApp(appId: number): Promise<boolean> {
-    const app = await models.App.findOne({
+    const deleted = await models.App.destroy({
       where: {
         projectId: this.projectId,
         id: appId,
       },
       transaction: this.transaction,
     });
-    if (!app) {
+    if (!deleted) {
       return false;
     }
 

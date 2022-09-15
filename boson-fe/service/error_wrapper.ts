@@ -1,7 +1,9 @@
-import { NextApiHandler, NextApiRequest } from "next";
+import { GetServerSidePropsContext, NextApiHandler, NextApiRequest } from "next";
 import { getToken, JWT } from "next-auth/jwt";
 import { Transaction, ValidationError } from "sequelize";
 import * as models from "../models";
+import axios from "axios";
+import { NextRequest } from "next/server";
 
 export class PropCheckError extends Error {
   details: any;
@@ -58,7 +60,7 @@ export function checkProp_IsSafeInteger(dataName: string, data: unknown): number
   return checkProp(dataName, data, (x): x is number => typeof x === "number" && Number.isSafeInteger(x));
 }
 
-export async function mustGetToken(req: NextApiRequest): Promise<JWT & { uid: string }> {
+export async function mustGetToken(req: GetServerSidePropsContext["req"] | NextRequest | NextApiRequest): Promise<JWT & { uid: string }> {
   const token = await getToken({ req });
   if (!token || typeof token.uid !== "string") {
     throw new MissingTokenError("token is missing or invalid");
@@ -67,9 +69,9 @@ export async function mustGetToken(req: NextApiRequest): Promise<JWT & { uid: st
   return token as any;
 }
 
-export async function getAndVerifyProjectPermissions(req: NextApiRequest, transaction: Transaction): Promise<{ userId: string, projectId: string }> {
+
+export async function getAndVerifyProjectPermissions2(req: GetServerSidePropsContext["req"] | NextRequest | NextApiRequest, projectId: string, transaction: Transaction | null): Promise<{ userId: string, projectId: string }> {
   const { uid: userId } = await mustGetToken(req);
-  const projectId = checkProp_IsString("projectId", req.body.projectId);
 
   const membership = await models.ProjectMember.findOne({
     where: {
@@ -86,6 +88,11 @@ export async function getAndVerifyProjectPermissions(req: NextApiRequest, transa
     userId,
     projectId,
   }
+}
+
+export async function getAndVerifyProjectPermissions(req: NextApiRequest, transaction: Transaction | null): Promise<{ userId: string, projectId: string }> {
+  const projectId = checkProp_IsString("projectId", req.body.projectId);
+  return getAndVerifyProjectPermissions2(req, projectId, transaction);
 }
 
 export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
@@ -133,6 +140,14 @@ export function wrapApiHandler(handler: NextApiHandler): NextApiHandler {
         return res.status(403).json({
           error: "permission_error",
           message: e.message,
+        });
+      }
+
+      if (axios.isAxiosError(e)) {
+        console.log("axios error: ", e);
+        return res.status(502).json({
+          error: "fetch_error",
+          message: "" + e.code,
         });
       }
 
