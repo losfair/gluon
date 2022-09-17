@@ -105,10 +105,10 @@ executable gluon-statekeeper-exe
       aeson
     , base >=4.7 && <5
     , binary
-    , gluon-statekeeper
     , clock
     , cryptonite
     , direct-sqlite
+    , gluon-statekeeper
     , http-client
     , http-types
     , microlens-th
@@ -130,10 +130,10 @@ test-suite gluon-statekeeper-test
       aeson
     , base >=4.7 && <5
     , binary
-    , gluon-statekeeper
     , clock
     , cryptonite
     , direct-sqlite
+    , gluon-statekeeper
     , http-client
     , http-types
     , microlens-th
