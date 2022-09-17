@@ -8,6 +8,7 @@ CREATE TABLE Apps (
   projectId TEXT NOT NULL,
   id INTEGER NOT NULL,
   name TEXT NOT NULL,
+  autopilotAppName TEXT,
   spec JSON NOT NULL,
   config JSON NOT NULL,
   createdAt INTEGER NOT NULL DEFAULT (unixepoch('now')),

@@ -35,6 +35,7 @@ export interface MachineConfig {
   env?: Record<string, string> | null;
   guest?: {
     cpus: number;
+    cpu_kind: "shared" | "performance";
     memory_mb: number;
   } | null;
 }
@@ -53,9 +54,10 @@ export const MachineConfig_schema: JSONSchemaType<MachineConfig> = {
       type: "object",
       properties: {
         cpus: { type: "integer" },
+        cpu_kind: { type: "string", enum: ["shared", "performance"] },
         memory_mb: { type: "integer" },
       },
-      required: ["cpus", "memory_mb"],
+      required: ["cpus", "cpu_kind", "memory_mb"],
       nullable: true,
     },
   },

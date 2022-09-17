@@ -70,7 +70,7 @@ export async function mustGetToken(req: GetServerSidePropsContext["req"] | NextR
 }
 
 
-export async function getAndVerifyProjectPermissions2(req: GetServerSidePropsContext["req"] | NextRequest | NextApiRequest, projectId: string, transaction: Transaction | null): Promise<{ userId: string, projectId: string }> {
+export async function getAndVerifyProjectPermissions2(req: GetServerSidePropsContext["req"] | NextRequest | NextApiRequest, projectId: string, transaction: Transaction | null): Promise<models.ProjectMember> {
   const { uid: userId } = await mustGetToken(req);
 
   const membership = await models.ProjectMember.findOne({
@@ -84,13 +84,10 @@ export async function getAndVerifyProjectPermissions2(req: GetServerSidePropsCon
     throw new PermissionError("you are not a member of this project");
   }
 
-  return {
-    userId,
-    projectId,
-  }
+  return membership;
 }
 
-export async function getAndVerifyProjectPermissions(req: NextApiRequest, transaction: Transaction | null): Promise<{ userId: string, projectId: string }> {
+export async function getAndVerifyProjectPermissions(req: NextApiRequest, transaction: Transaction | null): Promise<models.ProjectMember> {
   const projectId = checkProp_IsString("projectId", req.body.projectId);
   return getAndVerifyProjectPermissions2(req, projectId, transaction);
 }

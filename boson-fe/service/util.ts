@@ -3,10 +3,9 @@ import { getAndVerifyProjectPermissions2, MissingTokenError, PermissionError } f
 
 // Ensure initialization in the renderer context
 import "./db";
+import { models } from "./db";
 
-export interface ProjectProps {
-  projectId: string;
-}
+export type ProjectProps = models.ProjectMember;
 
 export const loadProjectProps: GetServerSideProps = async (context): Promise<GetServerSidePropsResult<ProjectProps>> => {
   const projectId = context.params?.projectId;
@@ -16,8 +15,10 @@ export const loadProjectProps: GetServerSideProps = async (context): Promise<Get
     };
   }
 
+  let membership: models.ProjectMember;
+
   try {
-    await getAndVerifyProjectPermissions2(context.req, projectId, null);
+    membership = await getAndVerifyProjectPermissions2(context.req, projectId, null);
   } catch (e) {
     if (e instanceof MissingTokenError) {
       return {
@@ -38,8 +39,6 @@ export const loadProjectProps: GetServerSideProps = async (context): Promise<Get
   }
 
   return {
-    props: {
-      projectId: projectId
-    },
+    props: JSON.parse(JSON.stringify(membership)),
   }
 }

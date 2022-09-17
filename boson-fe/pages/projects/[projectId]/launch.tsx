@@ -1,21 +1,19 @@
-import { Container, Col, Row, Card, Spacer, Button, Input, Loading, Text } from '@nextui-org/react'
-import loading from '@nextui-org/react/types/loading'
-import type { GetServerSideProps, NextPage } from 'next'
-import { useSession } from 'next-auth/react'
+import { Container, Col, Row, Button, Input, Loading, Text, Image, Link } from '@nextui-org/react'
+import type { NextPage } from 'next'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
-import React, { useCallback, useEffect, useState } from 'react'
-import { useRecoilValue, useRecoilValueLoadable } from 'recoil'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { MemoConfigEditor } from '../../../components/config_editor'
+import { Footer } from '../../../components/footer'
 import { RequireAuth } from '../../../components/require_auth'
 import { RequireProject } from '../../../components/require_project'
 import { loadJson } from '../../../feutil/network'
-import { firstProjectSelector, projectListQuery, projectSelector } from '../../../feutil/state'
 import type { AppConfig, AppSpec } from '../../../models/App'
-import { loadProjectProps } from '../../../service/util'
+import { loadProjectProps, ProjectProps } from '../../../service/util'
 
 export const getServerSideProps = loadProjectProps;
 
-const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
+const Launch: NextPage<ProjectProps> = ({ projectId, userId }) => {
   const [name, setName] = useState("");
   const [spec, setSpec] = useState(null as AppSpec | null);
   const [loading, setLoading] = useState(false);
@@ -23,17 +21,14 @@ const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
   const router = useRouter();
   const specUrl = typeof router.query.spec === "string" ? router.query.spec : ""
   const [pendingSpecUrl, setPendingSpecUrl] = useState("");
-  const [cpus, setCpus] = useState("1");
-  const [memoryMB, setMemoryMB] = useState("256");
-  const [env, setEnv] = useState({} as Record<string, string>);
-
-  useEffect(() => {
-    if (!spec) return;
-
-    setCpus("1");
-    setMemoryMB("" + (spec.minMemoryMB || 256));
-    setEnv({});
-  }, [spec])
+  const initialConfig: AppConfig = useMemo(() => {
+    return {
+      cpus: 1,
+      memoryMB: spec?.minMemoryMB || 256,
+      env: {},
+    }
+  }, [spec]);
+  const buildConfigRef: React.MutableRefObject<() => AppConfig | string> = React.useRef(() => "buildConfigRef not set");
 
   const doLoadSpec = useCallback(() => {
     router.push({
@@ -44,26 +39,20 @@ const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
   }, [pendingSpecUrl]);
 
   useEffect(() => {
-    if (!specUrl) return;
+    if (!specUrl) {
+      setSpec(null);
+      return;
+    }
     loadJson("/api/app/specproxy?url=" + encodeURIComponent(specUrl))
       .then(x => { setSpec(x); setLastError("") })
       .catch(e => setLastError("" + e));
   }, [specUrl]);
 
   const doLaunch = useCallback(() => {
-    const config: AppConfig = {
-      cpus: parseInt(cpus),
-      memoryMB: parseInt(memoryMB),
-      env,
-    };
+    const config = buildConfigRef.current();
 
-    if (!Number.isSafeInteger(config.cpus)) {
-      setLastError("Invalid CPU count");
-      return;
-    }
-
-    if (!Number.isSafeInteger(config.memoryMB)) {
-      setLastError("Invalid memory");
+    if (typeof config === "string") {
+      setLastError(config);
       return;
     }
 
@@ -83,7 +72,7 @@ const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
       .finally(() => {
         setLoading(false);
       })
-  }, [name, spec, cpus, memoryMB, env]);
+  }, [name, spec]);
 
   return (
     <RequireAuth>
@@ -110,19 +99,35 @@ const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
 
             {
               !!spec && <Col>
+                <Row align="center" css={{ pb: 40 }}>
+                  {!!spec.icon && <Col css={{ width: "auto" }}><Image width={60} height={60} src={spec.icon} /></Col>}
+                  <Col css={{ flexGrow: 1, width: "auto", pl: 16 }}>
+                    <Row><Text size={20} weight="semibold">{spec.name || spec.image}</Text></Row>
+                    {!!spec.description && <Row><Text size={16}>{spec.description}</Text></Row>}
+                  </Col>
+                  <Col css={{ width: "auto", pl: 16 }}>
+                    <Row>
+                      {!!spec.homepage && <Col css={{ pr: 12 }}>
+                        <Link href={spec.homepage} target="_blank" title="Homepage">
+                          <svg style={{ width: 20 }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                          </svg>
+                        </Link>
+                      </Col>}
+                      <Col>
+                        <Link href={specUrl} target="_blank" title="Spec">
+                          <svg style={{ width: 20 }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                          </svg>
+                        </Link>
+                      </Col>
+                    </Row>
+                  </Col>
+                </Row>
                 <Row css={{ pb: 40 }}>
                   <Input css={{ flexGrow: 1 }} underlined labelPlaceholder="Name" value={name} onChange={e => setName(e.target.value)} />
                 </Row>
-                <Row css={{ pb: 40 }}><Text as="h2" size={20} color="primary">Machine</Text></Row>
-                <Row css={{ pb: 40 }}>
-                  <Input css={{ flexGrow: 1 }} underlined labelPlaceholder="CPUs" value={cpus} onChange={e => setCpus(e.target.value)} />
-                </Row>
-                <Row css={{ pb: 40 }}>
-                  <Input css={{ flexGrow: 1 }} underlined labelPlaceholder="Memory (MiB)" value={memoryMB} onChange={e => setMemoryMB(e.target.value)} />
-                </Row>
-                <Row css={{ pb: 40 }}><Text as="h2" size={20} color="primary">App settings</Text></Row>
-                <Col>
-                </Col>
+                <MemoConfigEditor spec={spec} initialConfig={initialConfig} buildConfigRef={buildConfigRef} />
                 <Row css={{ pb: 20 }}>
                   <Button css={{ flexGrow: 1 }} disabled={loading} onClick={doLaunch}>
                     {loading ? <Loading color="currentColor" size="sm" /> : "Launch"}</Button>
@@ -130,9 +135,8 @@ const Launch: NextPage<{ projectId: string }> = ({ projectId }) => {
                 {!!lastError && <Row css={{ pb: 20 }}><Text color="error">{lastError}</Text></Row>}
               </Col>
             }
-            <Row></Row>
-
           </Col>
+          <Footer projectId={projectId} userId={userId} />
         </Container>
       </RequireProject>
     </RequireAuth>

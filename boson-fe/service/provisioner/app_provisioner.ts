@@ -22,20 +22,22 @@ export class AppProvisioner {
 
     const machineEnv: Record<string, string> = { ...config.env || {} };
     for (const [envKey, envSpec] of Object.entries(spec.env || {})) {
-      const isSet = machineEnv[envKey] === "string";
+      const isSet = typeof machineEnv[envKey] === "string";
 
       if (envSpec.required && !isSet) {
         throw new PropCheckError(`missing required env var '${envKey}'`);
       }
 
       if (isSet && typeof envSpec.regex === "string") {
+        let regex: RegExp;
         try {
-          const regex = new RegExp(envSpec.regex);
-          if (!regex.test(machineEnv[envKey])) {
-            throw new PropCheckError(`env var '${envKey}' does not match regex: ${envSpec.regex}`);
-          }
+          regex = new RegExp(envSpec.regex);
         } catch (e) {
           throw new PropCheckError(`env var '${envKey}' has invalid regex: ${envSpec.regex}`);
+        }
+
+        if (!regex.test(machineEnv[envKey])) {
+          throw new PropCheckError(`env var '${envKey}' does not match regex: ${envSpec.regex}`);
         }
       }
 
@@ -58,6 +60,7 @@ export class AppProvisioner {
       env: machineEnv,
       guest: {
         cpus: config.cpus,
+        cpu_kind: "shared",
         memory_mb: config.memoryMB,
       },
     };

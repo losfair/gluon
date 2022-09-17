@@ -1,6 +1,6 @@
 import { JSONSchemaType } from "ajv";
 import { DataTypes } from "sequelize";
-import { AllowNull, Column, IsLowercase, Length, Model, PrimaryKey, Table } from "sequelize-typescript"
+import { AllowNull, Column, Is, IsLowercase, Length, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
   timestamps: false,
@@ -14,10 +14,13 @@ export default class App extends Model {
   @Column(DataTypes.INTEGER)
   id: number;
 
-  @IsLowercase
-  @Length({ min: 4, max: 100 })
+  @Is(/^[a-z0-9-]+$/)
+  @Length({ min: 4, max: 50 })
   @Column(DataTypes.TEXT)
   name: string;
+
+  @Column(DataTypes.TEXT)
+  autopilotAppName: string | null;
 
   @Column(DataTypes.JSON)
   spec: AppSpec;
@@ -33,13 +36,20 @@ export default class App extends Model {
 }
 
 export interface AppSpec {
+  name?: string | null;
+  icon?: string | null;
+  description?: string | null;
+  homepage?: string | null;
+
   image: string;
   minMemoryMB?: number | null;
   env?: Record<string, {
+    title?: string | null;
     description?: string | null;
     default?: string | null;
     required?: boolean | null;
     regex?: string | null;
+    hidden?: boolean | null;
     type?: "text" | "switch" | "secret" | null;
   }> | null;
   s3?: Record<string, {
@@ -53,6 +63,11 @@ export interface AppSpec {
 export const AppSpec_schema: JSONSchemaType<AppSpec> = {
   type: "object",
   properties: {
+    name: { type: "string", nullable: true },
+    icon: { type: "string", nullable: true },
+    description: { type: "string", nullable: true },
+    homepage: { type: "string", nullable: true },
+
     image: { type: "string" },
     minMemoryMB: { type: "integer", nullable: true },
     env: {
@@ -60,10 +75,12 @@ export const AppSpec_schema: JSONSchemaType<AppSpec> = {
       additionalProperties: {
         type: "object",
         properties: {
+          title: { type: "string", nullable: true },
           description: { type: "string", nullable: true },
           default: { type: "string", nullable: true },
           required: { type: "boolean", nullable: true },
           regex: { type: "string", nullable: true },
+          hidden: { type: "boolean", nullable: true },
           type: { type: "string", enum: ["text", "switch", "secret"], nullable: true },
         },
         additionalProperties: false,
