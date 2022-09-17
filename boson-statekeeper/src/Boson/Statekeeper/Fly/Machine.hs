@@ -36,7 +36,8 @@ data MachineConfig = MachineConfig
 
 data GuestAllocation = GuestAllocation
   { _gaCpus :: Int,
-    _gaMemoryMB :: Int
+    _gaMemoryMB :: Int,
+    _gaCpuKind :: Text
   }
   deriving (Generic)
 
