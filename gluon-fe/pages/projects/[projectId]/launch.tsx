@@ -3,11 +3,13 @@ import type { NextPage } from 'next'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/router'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { useRecoilRefresher_UNSTABLE } from 'recoil'
 import { MemoConfigEditor } from '../../../components/config_editor'
 import { Footer } from '../../../components/footer'
 import { RequireAuth } from '../../../components/require_auth'
 import { RequireProject } from '../../../components/require_project'
 import { loadJson } from '../../../feutil/network'
+import { appListQuery } from '../../../feutil/state'
 import type { AppConfig, AppSpec } from '../../../models/App'
 import { loadProjectProps, ProjectProps } from '../../../service/util'
 
@@ -29,6 +31,7 @@ const Launch: NextPage<ProjectProps> = ({ projectId, userId }) => {
     }
   }, [spec]);
   const buildConfigRef: React.MutableRefObject<() => AppConfig | string> = React.useRef(() => "buildConfigRef not set");
+  const appListRefresh = useRecoilRefresher_UNSTABLE(appListQuery(projectId));
 
   const doLoadSpec = useCallback(() => {
     router.push({
@@ -65,6 +68,7 @@ const Launch: NextPage<ProjectProps> = ({ projectId, userId }) => {
       config,
     })
       .then(x => {
+        appListRefresh();
         router.push(`/projects/${projectId}/apps/${x.id}`);
         setLastError("");
       })
@@ -72,7 +76,7 @@ const Launch: NextPage<ProjectProps> = ({ projectId, userId }) => {
       .finally(() => {
         setLoading(false);
       })
-  }, [name, spec]);
+  }, [name, spec, appListRefresh]);
 
   return (
     <RequireAuth>

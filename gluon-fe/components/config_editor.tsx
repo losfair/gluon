@@ -40,6 +40,7 @@ const ConfigEditor: React.FC<{
     </Row>
     <Row css={{ pb: 20 }}><Text as="h2" size={20} color="primary">App settings</Text></Row>
     <Col>
+      {(!spec.env || !Object.keys(spec.env).length) && <Row css={{ pb: 40 }}><Text css={{ color: "gray" }}>No settings</Text></Row>}
       {Object.entries(spec.env || {}).map(([k, v]) => {
         if (v.hidden) return null;
         console.log(v);
