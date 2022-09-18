@@ -5,7 +5,7 @@ module Gluon.Statekeeper.ProjectWorker.Worker (WorkerEnv (..), weEnv, weProjectI
 import qualified Data.Aeson as A
 import qualified Database.SQLite.Simple as S
 import Gluon.Statekeeper.Env
-import Gluon.Statekeeper.Fly.Machine (MachineConfig, MachineId (MachineId), miId, spinDown, spinUp, updateMachine)
+import Gluon.Statekeeper.Fly.Machine (MachineConfig, MachineId (MachineId), miId, miPrivateIp, spinDown, spinUp, updateMachine)
 import Gluon.Util.Database (retryableTxn)
 import Gluon.Util.Delay (DelayConfig (DelayConfig), newDelayGenerator, runDelay)
 import Gluon.Util.Exception (fromJustOrThrow)
@@ -181,8 +181,8 @@ mutateMachine db snapshot mut = do
                     liftIO $
                       S.execute
                         db
-                        "UPDATE Machines SET flyId = ? WHERE projectId = ? AND id = ?"
-                        (machine ^. miId, projectId, mut ^. mutResourceId)
+                        "UPDATE Machines SET flyId = ?, flyPrivateIp = ? WHERE projectId = ? AND id = ?"
+                        (machine ^. miId, machine ^. miPrivateIp, projectId, mut ^. mutResourceId)
                   pure ()
             "update" -> do
               logInfoS (logTaskSource env) $ "updating machine " <> display machineName

@@ -8,6 +8,7 @@ module Gluon.Statekeeper.Fly.Machine
     spinDown,
     updateMachine,
     miId,
+    miPrivateIp,
   )
 where
 
