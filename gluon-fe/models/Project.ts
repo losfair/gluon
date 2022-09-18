@@ -1,11 +1,11 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import { AllowNull, BelongsToMany, Column, HasMany, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
 import ProjectMember from "./ProjectMember";
 
 @Table({
   timestamps: false,
 })
-export default class Project extends Model {
+export default class Project extends Model<InferAttributes<Project>, InferCreationAttributes<Project>> {
   @PrimaryKey
   @Column
   id: string;

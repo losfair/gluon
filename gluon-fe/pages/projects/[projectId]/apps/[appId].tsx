@@ -1,4 +1,4 @@
-import { Container, Col, Row, Card, Spacer, Button, Input, Loading, Text, Image, Link, Checkbox, Modal } from '@nextui-org/react'
+import { Container, Col, Row, Card, Spacer, Button, Input, Loading, Text, Image, Link, Checkbox, Modal, Collapse } from '@nextui-org/react'
 import type { NextPage } from 'next'
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
@@ -8,16 +8,20 @@ import { RequireProject } from '../../../../components/require_project'
 import { appListQuery, appSelector, projectSelector } from '../../../../feutil/state'
 import { loadProjectProps, ProjectProps } from '../../../../service/util'
 import NextLink from 'next/link'
-import type { App } from '../../../../models'
+import type { App, Machine } from '../../../../models'
 import { Footer } from '../../../../components/footer'
 import { useRouter } from 'next/router'
 import { AppCard } from '../../../../components/app_card'
 import React, { useCallback, useState } from 'react'
 import { loadJson } from '../../../../feutil/network'
+import { AppInfo } from '../../../../service/api_types'
+import { InferAttributes } from 'sequelize'
+import { MemoConfigEditor } from '../../../../components/config_editor'
+import { AppConfig } from '../../../../models/App'
 
 export const getServerSideProps = loadProjectProps;
 
-const DeleteModal: React.FC<{ app: App, isOpen: boolean, busy: boolean, onClose: () => void, doDelete: () => void }> = ({ app, isOpen, busy, onClose, doDelete }) => {
+const DeleteModal: React.FC<{ app: AppInfo, isOpen: boolean, busy: boolean, onClose: () => void, doDelete: () => void }> = ({ app, isOpen, busy, onClose, doDelete }) => {
   const [name, setName] = React.useState("");
 
   return (
@@ -60,6 +64,15 @@ const DeleteModal: React.FC<{ app: App, isOpen: boolean, busy: boolean, onClose:
 
 const MemoDeleteModal = React.memo(DeleteModal);
 
+const MachineStateCard: React.FC<{ app: AppInfo, machine: InferAttributes<Machine> }> = ({ app, machine }) => {
+  return (
+    <>
+
+      <Row css={{ pb: 20 }}><Text as="h2" size={20} color="primary">Machine</Text></Row>
+    </>
+  )
+}
+
 const SingleApp: NextPage<ProjectProps> = ({ projectId, userId }) => {
   const router = useRouter();
   const appId = parseInt(router.query.appId as string);
@@ -67,6 +80,9 @@ const SingleApp: NextPage<ProjectProps> = ({ projectId, userId }) => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const appListRefresh = useRecoilRefresher_UNSTABLE(appListQuery(projectId));
+  const machine = app.state === "hasValue" ? (app.contents?.machines[0] || null) : null;
+  const machineReady = !!machine?.flyId;
+  const buildConfigRef: React.MutableRefObject<() => AppConfig | string> = React.useRef(() => "not ready");
 
   const closeDelete = useCallback(() => {
     if (deleteBusy) return;
@@ -96,9 +112,34 @@ const SingleApp: NextPage<ProjectProps> = ({ projectId, userId }) => {
             </Row>
             {app.state === "hasValue" && !!app.contents && <>
               <AppCard app={app.contents} inSingleAppPage />
-              <Row css={{ pt: 20 }}>
-                <Button color="error" onClick={() => setDeleteOpen(true)}>Delete App</Button>
-              </Row>
+
+
+              {!!machine && !machineReady && <Row css={{ pt: 40 }}>
+                <Loading color="warning"></Loading>
+                <Text css={{ pl: 20 }} weight="semibold">App is starting</Text>
+              </Row>}
+
+              {machineReady && <Row css={{ pt: 40 }}>
+                <Text weight="semibold">Machine</Text>
+              </Row>}
+
+              <Col css={{ pt: 40 }}>
+                <Collapse.Group accordion={false} css={{ px: 0 }}>
+                  <Collapse title="App Config">
+                    <MemoConfigEditor readonly spec={app.contents.spec} initialConfig={app.contents.config} buildConfigRef={buildConfigRef} />
+                  </Collapse>
+                  <Collapse title="Machine Info">
+                    {machineReady && <Col css={{ pt: 40 }}>
+                      <MachineStateCard app={app.contents} machine={machine!} />
+                    </Col>}
+                  </Collapse>
+                  <Collapse title="Danger Zone">
+                    <Row>
+                      <Button color="error" onClick={() => setDeleteOpen(true)}>Delete App</Button>
+                    </Row>
+                  </Collapse>
+                </Collapse.Group>
+              </Col>
               <MemoDeleteModal app={app.contents} isOpen={deleteOpen} busy={deleteBusy} onClose={closeDelete} doDelete={doDelete} />
             </>}
           </Col>

@@ -1,5 +1,6 @@
 import { selector, selectorFamily } from "recoil";
 import type { Project, ProjectMember, App } from "../models";
+import type { AppInfo } from "../service/api_types";
 import { loadJson } from "./network";
 
 export interface ProjectInfo {
@@ -28,14 +29,14 @@ export const firstProjectSelector = selector<ProjectInfo | null>({
   }
 });
 
-export const appListQuery = selectorFamily<App[], string>({
+export const appListQuery = selectorFamily<AppInfo[], string>({
   key: "appListQuery",
-  get: projectId => async () => await loadJson<App[]>("/api/app/list", {
+  get: projectId => async () => await loadJson<AppInfo[]>("/api/app/list", {
     projectId,
   })
 });
 
-export const appSelector = selectorFamily<App | null, [string, number]>({
+export const appSelector = selectorFamily<AppInfo | null, [string, number]>({
   key: "appSelector",
   get: ([projectId, appId]) => ({ get }) => {
     const apps = get(appListQuery(projectId));

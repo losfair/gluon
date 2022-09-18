@@ -1,11 +1,11 @@
 import { JSONSchemaType } from "ajv"
-import { DataTypes } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import { Column, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
   timestamps: false,
 })
-export default class Machine extends Model {
+export default class Machine extends Model<InferAttributes<Machine>, InferCreationAttributes<Machine>> {
   @PrimaryKey
   @Column(DataTypes.TEXT)
   projectId: string;
@@ -22,6 +22,9 @@ export default class Machine extends Model {
 
   @Column(DataTypes.JSON)
   config: MachineConfig;
+
+  @Column(DataTypes.TEXT)
+  flyId: string | null;
 
   @Column(DataTypes.INTEGER)
   createdAt: number;

@@ -2,8 +2,9 @@ import { Card, Row, Col, Image, Text } from "@nextui-org/react"
 import React from "react"
 import type { App } from "../models"
 import NextLink from "next/link"
+import { AppInfo } from "../service/api_types"
 
-export const AppCard: React.FC<{ app: App, inSingleAppPage?: boolean }> = ({ app, inSingleAppPage }) => {
+export const AppCard: React.FC<{ app: AppInfo, inSingleAppPage?: boolean }> = ({ app, inSingleAppPage }) => {
   return (
     <Card key={app.id} css={{ mt: 30, h: 100 }} isHoverable={!inSingleAppPage} variant="bordered">
       {!!inSingleAppPage ?
@@ -15,7 +16,7 @@ export const AppCard: React.FC<{ app: App, inSingleAppPage?: boolean }> = ({ app
   )
 }
 
-const AppCardRow: React.FC<{ app: App, inSingleAppPage?: boolean }> = ({ app, inSingleAppPage }) => {
+const AppCardRow: React.FC<{ app: AppInfo, inSingleAppPage?: boolean }> = ({ app, inSingleAppPage }) => {
   return (
     <Row
       key={app.id}

@@ -1,11 +1,11 @@
 import { JSONSchemaType } from "ajv";
-import { DataTypes } from "sequelize";
+import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
 import { AllowNull, Column, Is, IsLowercase, Length, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
   timestamps: false,
 })
-export default class App extends Model {
+export default class App extends Model<InferAttributes<App>, InferCreationAttributes<App>> {
   @PrimaryKey
   @Column(DataTypes.TEXT)
   projectId: string;

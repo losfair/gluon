@@ -6,8 +6,9 @@ import type { AppConfig, AppSpec } from "../models/App";
 const ConfigEditor: React.FC<{
   spec: AppSpec,
   initialConfig: AppConfig,
+  readonly?: boolean,
   buildConfigRef: React.MutableRefObject<() => AppConfig | string>,
-}> = ({ spec, initialConfig, buildConfigRef }) => {
+}> = ({ spec, initialConfig, readonly, buildConfigRef }) => {
   const [cpus, setCpus] = useState("" + initialConfig.cpus);
   const [memoryMB, setMemoryMB] = useState("" + initialConfig.memoryMB);
   const [env, setEnv] = useState(() => ({ ...initialConfig.env || {} }));
@@ -33,10 +34,10 @@ const ConfigEditor: React.FC<{
   return (<>
     <Row css={{ pb: 40 }}><Text as="h2" size={20} color="primary">Machine</Text></Row>
     <Row css={{ pb: 40 }}>
-      <Input css={{ flexGrow: 1 }} underlined labelPlaceholder="CPUs" value={cpus} onChange={e => setCpus(e.target.value)} />
+      <Input disabled={readonly} css={{ flexGrow: 1 }} underlined labelPlaceholder="CPUs" value={cpus} onChange={e => setCpus(e.target.value)} />
     </Row>
     <Row css={{ pb: 40 }}>
-      <Input css={{ flexGrow: 1 }} underlined labelPlaceholder="Memory (MiB)" value={memoryMB} onChange={e => setMemoryMB(e.target.value)} />
+      <Input disabled={readonly} css={{ flexGrow: 1 }} underlined labelPlaceholder="Memory (MiB)" value={memoryMB} onChange={e => setMemoryMB(e.target.value)} />
     </Row>
     <Row css={{ pb: 20 }}><Text as="h2" size={20} color="primary">App settings</Text></Row>
     <Col>
@@ -52,6 +53,7 @@ const ConfigEditor: React.FC<{
         switch (type) {
           case "text": {
             elem = <Input
+              disabled={readonly}
               css={{ flexGrow: 1 }}
               underlined
               label={title}
@@ -63,6 +65,7 @@ const ConfigEditor: React.FC<{
           }
           case "secret": {
             elem = <Input.Password
+              disabled={readonly}
               css={{ flexGrow: 1 }}
               underlined
               label={title}
