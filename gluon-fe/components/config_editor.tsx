@@ -44,7 +44,6 @@ const ConfigEditor: React.FC<{
       {(!spec.env || !Object.keys(spec.env).length) && <Row css={{ pb: 40 }}><Text css={{ color: "gray" }}>No settings</Text></Row>}
       {Object.entries(spec.env || {}).map(([k, v]) => {
         if (v.hidden) return null;
-        console.log(v);
         let elem: React.ReactNode;
         const type = v.type || "text";
         const title = v.title || k;

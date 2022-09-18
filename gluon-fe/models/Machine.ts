@@ -27,6 +27,9 @@ export default class Machine extends Model<InferAttributes<Machine>, InferCreati
   @Column(DataTypes.TEXT)
   flyId: CreationOptional<string | null>;
 
+  @Column(DataTypes.TEXT)
+  flyPrivateIp: CreationOptional<string | null>;
+
   @Column(DataTypes.INTEGER)
   createdAt: CreationOptional<number>;
 

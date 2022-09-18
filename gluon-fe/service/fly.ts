@@ -7,6 +7,8 @@ export interface MachineInfo {
   region: string,
   instance_id: string,
   private_ip: string,
+  created_at: string,
+  updated_at: string,
   config: any,
   image_ref: any
 }
@@ -25,7 +27,7 @@ if (!FLY_MACHINE_APP_NAME) {
 }
 
 export async function getMachineInfo(machineId: string): Promise<MachineInfo> {
-  const { data } = await axios.get<MachineInfo>(`${FLY_MACHINE_API_ORIGIN}/api/v1/apps/${FLY_MACHINE_APP_NAME}/machines/${machineId}`, {
+  const { data } = await axios.get<MachineInfo>(`${FLY_MACHINE_API_ORIGIN}/v1/apps/${FLY_MACHINE_APP_NAME}/machines/${machineId}`, {
     headers: {
       "Authorization": `Bearer ${FLY_MACHINE_API_TOKEN}`,
     }

@@ -35,7 +35,6 @@ async function handler(
     }
 
     const id = await allocateResourceId(transaction, projectId);
-    console.log("id", id);
     const machine = await models.Machine.create({
       projectId,
       id,

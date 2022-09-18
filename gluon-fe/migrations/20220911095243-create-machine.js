@@ -11,6 +11,7 @@ CREATE TABLE Machines (
   name TEXT NOT NULL,
   config JSON NOT NULL,
   flyId TEXT,
+  flyPrivateIp TEXT,
   createdAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
   updatedAt INTEGER NOT NULL DEFAULT (unixepoch('now')),
   PRIMARY KEY (projectId, id)
