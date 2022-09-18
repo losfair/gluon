@@ -6,10 +6,13 @@ module Gluon.Statekeeper.Fly.Machine
     MachineId (..),
     spinUp,
     spinDown,
+    updateMachine,
     miId,
   )
 where
 
+import Data.Aeson
+import Data.List (find)
 import Gluon.Statekeeper.Env
   ( FlyConfig,
     HasLogTaskSource (logTaskSource),
@@ -19,8 +22,6 @@ import Gluon.Statekeeper.Env
     flyMachineAppName,
   )
 import Gluon.Util.Http (isStatusCodeException)
-import Data.Aeson
-import Data.List (find)
 import Lens.Micro.TH (makeLenses)
 import qualified Network.HTTP.Client as L
 import Network.HTTP.Req
@@ -47,6 +48,11 @@ data CreateMachinePayload = CreateMachinePayload
   }
   deriving (Generic)
 
+data UpdateMachinePayload = UpdateMachinePayload
+  { _umpConfig :: MachineConfig
+  }
+  deriving (Generic)
+
 data MachineInfo = MachineInfo
   { _miId :: Text,
     _miName :: Text,
@@ -64,6 +70,7 @@ newtype MachineId = MachineId Text
 makeLenses ''MachineConfig
 makeLenses ''GuestAllocation
 makeLenses ''CreateMachinePayload
+makeLenses ''UpdateMachinePayload
 makeLenses ''MachineInfo
 
 mcJsonCodec :: String -> String
@@ -74,6 +81,9 @@ gaJsonCodec = camelTo2 '_' . drop 3
 
 cmpJsonCodec :: String -> String
 cmpJsonCodec = camelTo2 '_' . drop 4
+
+umpJsonCodec :: String -> String
+umpJsonCodec = camelTo2 '_' . drop 4
 
 miJsonCodec :: String -> String
 miJsonCodec = camelTo2 '_' . drop 3
@@ -95,6 +105,12 @@ instance FromJSON CreateMachinePayload where
 
 instance ToJSON CreateMachinePayload where
   toJSON = genericToJSON defaultOptions {fieldLabelModifier = cmpJsonCodec}
+
+instance FromJSON UpdateMachinePayload where
+  parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = umpJsonCodec}
+
+instance ToJSON UpdateMachinePayload where
+  toJSON = genericToJSON defaultOptions {fieldLabelModifier = umpJsonCodec}
 
 instance FromJSON MachineInfo where
   parseJSON = genericParseJSON defaultOptions {fieldLabelModifier = miJsonCodec}
@@ -161,6 +177,18 @@ spinDown config name = do
             Nothing -> throwIO exc
         Right _ -> do
           pure ()
+
+updateMachine :: FlyConfig -> MachineId -> MachineConfig -> RIO env MachineInfo
+updateMachine config (MachineId machineId) ms = do
+  let apiHostname = config ^. flyMachineApiHostname
+  let appName = config ^. flyMachineAppName
+  res :: JsonResponse MachineInfo <-
+    runReq defaultHttpConfig $
+      req POST (http apiHostname /: "v1" /: "apps" /: appName /: "machines" /: machineId) (ReqBodyJson $ UpdateMachinePayload ms) jsonResponse $
+        reqScheme config
+
+  let machine :: MachineInfo = responseBody res
+  pure machine
 
 stopMachine :: FlyConfig -> MachineId -> RIO env ()
 stopMachine config (MachineId machineId) = do

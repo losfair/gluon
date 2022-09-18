@@ -2,13 +2,14 @@
 
 module Gluon.Statekeeper.ProjectWorker.Worker (WorkerEnv (..), weEnv, weProjectId, runWorker) where
 
-import Gluon.Statekeeper.Env
-import Gluon.Statekeeper.Fly.Machine (MachineConfig, miId, spinDown, spinUp)
-import Gluon.Util.Database (retryableTxn)
-import Gluon.Util.Delay (DelayConfig (DelayConfig), newDelayGenerator, runDelay)
-import Gluon.Util.Time (diffTimeMillis)
 import qualified Data.Aeson as A
 import qualified Database.SQLite.Simple as S
+import Gluon.Statekeeper.Env
+import Gluon.Statekeeper.Fly.Machine (MachineConfig, MachineId (MachineId), miId, spinDown, spinUp, updateMachine)
+import Gluon.Util.Database (retryableTxn)
+import Gluon.Util.Delay (DelayConfig (DelayConfig), newDelayGenerator, runDelay)
+import Gluon.Util.Exception (fromJustOrThrow)
+import Gluon.Util.Time (diffTimeMillis)
 import Lens.Micro.TH (makeLenses)
 import RIO
 import RIO.List (headMaybe)
@@ -156,17 +157,17 @@ mutateMachine db snapshot mut = do
     "delete" -> do
       spinDown (appConfig ^. flyConfig) machineName
     _ -> do
-      maybeMachineConfig :: Maybe (S.Only Text) <-
+      maybeMachineRow :: Maybe (Text, Maybe Text) <-
         liftIO $
           headMaybe
             <$> S.query
               snapshot
-              "SELECT config FROM Machines WHERE projectId = ? AND id = ? AND version = ?"
+              "SELECT config, flyId FROM Machines WHERE projectId = ? AND id = ? AND version = ?"
               (projectId, mut ^. mutResourceId, mut ^. mutVersion)
-      case maybeMachineConfig of
+      case maybeMachineRow of
         Nothing -> do
           logInfoS (logTaskSource env) "mutation outdated, skipping"
-        Just (S.Only config) -> do
+        Just (config, flyId) -> do
           logInfoS (logTaskSource env) $ display $ Text.concat ["machine config: ", config]
           case op of
             "create" -> do
@@ -182,6 +183,15 @@ mutateMachine db snapshot mut = do
                         db
                         "UPDATE Machines SET flyId = ? WHERE projectId = ? AND id = ?"
                         (machine ^. miId, projectId, mut ^. mutResourceId)
+                  pure ()
+            "update" -> do
+              logInfoS (logTaskSource env) $ "updating machine " <> display machineName
+              flyId' <- fromJustOrThrow "missing fly machine id" flyId
+              case A.eitherDecodeStrict' (Text.encodeUtf8 config) of
+                Left err -> do
+                  logErrorS (logTaskSource env) $ display $ Text.concat ["failed to decode machine config: ", Text.pack err]
+                Right (mc :: MachineConfig) -> do
+                  _ <- updateMachine (appConfig ^. flyConfig) (MachineId flyId') mc
                   pure ()
             _ -> do
               logErrorS (logTaskSource env) $ display $ Text.concat ["unknown operation: ", op]
