@@ -1,4 +1,5 @@
-import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import { DataTypes } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
 import { Column, HasOne, Model, PrimaryKey, Table } from "sequelize-typescript"
 import Project from "./Project";
 
@@ -19,5 +20,5 @@ export default class MachineClaim extends Model<InferAttributes<MachineClaim>, I
   machineId: number;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number;
+  createdAt: CreationOptional<number>;
 }

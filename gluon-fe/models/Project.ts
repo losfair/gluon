@@ -1,4 +1,5 @@
-import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import { DataTypes } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
 import { AllowNull, BelongsToMany, Column, HasMany, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
 import ProjectMember from "./ProjectMember";
 
@@ -16,11 +17,11 @@ export default class Project extends Model<InferAttributes<Project>, InferCreati
   name: string;
 
   @Column(DataTypes.INTEGER)
-  lastResourceId: number;
+  lastResourceId: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number;
+  createdAt: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
-  updatedAt: number;
+  updatedAt: CreationOptional<number>;
 }

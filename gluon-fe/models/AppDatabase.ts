@@ -1,4 +1,5 @@
-import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import { DataTypes } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
 import { AllowNull, Column, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
@@ -17,11 +18,11 @@ export default class AppDatabase extends Model<InferAttributes<AppDatabase>, Inf
   version: number;
 
   @Column(DataTypes.TEXT)
-  nsKey: number;
+  nsKey: CreationOptional<string | null>;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number;
+  createdAt: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
-  updatedAt: number;
+  updatedAt: CreationOptional<number>;
 }

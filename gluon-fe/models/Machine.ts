@@ -1,5 +1,6 @@
 import { JSONSchemaType } from "ajv"
-import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
+import { DataTypes } from "sequelize";
 import { Column, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
@@ -15,7 +16,7 @@ export default class Machine extends Model<InferAttributes<Machine>, InferCreati
   id: number;
 
   @Column(DataTypes.INTEGER)
-  version: number;
+  version: CreationOptional<number>;
 
   @Column(DataTypes.TEXT)
   name: string;
@@ -24,13 +25,13 @@ export default class Machine extends Model<InferAttributes<Machine>, InferCreati
   config: MachineConfig;
 
   @Column(DataTypes.TEXT)
-  flyId: string | null;
+  flyId: CreationOptional<string | null>;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number;
+  createdAt: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
-  updatedAt: number;
+  updatedAt: CreationOptional<number>;
 }
 
 export interface MachineConfig {

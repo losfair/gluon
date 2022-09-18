@@ -1,5 +1,6 @@
 import { JSONSchemaType } from "ajv";
-import { DataTypes, InferAttributes, InferCreationAttributes } from "sequelize";
+import { DataTypes } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
 import { AllowNull, Column, Is, IsLowercase, Length, Model, PrimaryKey, Table } from "sequelize-typescript"
 
 @Table({
@@ -20,7 +21,7 @@ export default class App extends Model<InferAttributes<App>, InferCreationAttrib
   name: string;
 
   @Column(DataTypes.TEXT)
-  autopilotAppName: string | null;
+  autopilotAppName: CreationOptional<string | null>;
 
   @Column(DataTypes.JSON)
   spec: AppSpec;
@@ -29,10 +30,10 @@ export default class App extends Model<InferAttributes<App>, InferCreationAttrib
   config: AppConfig;
 
   @Column(DataTypes.INTEGER)
-  createdAt: number;
+  createdAt: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
-  updatedAt: number;
+  updatedAt: CreationOptional<number>;
 }
 
 export interface AppSpec {
