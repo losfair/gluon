@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { models, retryableTxn } from "../../../service/db";
+import { models, directTxn } from "../../../service/db";
 import { mustGetToken, wrapApiHandler } from '../../../service/error_wrapper';
 
 async function handler(
@@ -9,7 +9,7 @@ async function handler(
   const token = await mustGetToken(req);
   const userId = token.uid;
 
-  const result = await retryableTxn(async transaction => {
+  const result = await directTxn(async transaction => {
     const memberships = await models.ProjectMember.findAll({
       where: {
         userId,

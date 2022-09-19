@@ -1,14 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { Machine } from '../../../models';
 import { AppInfo } from '../../../service/api_types';
-import { models, retryableTxn } from "../../../service/db";
+import { directTxn, models } from "../../../service/db";
 import { getAndVerifyProjectPermissions, wrapApiHandler } from '../../../service/error_wrapper';
 
 async function handler(
   req: NextApiRequest,
   res: NextApiResponse<AppInfo[]>
 ) {
-  const apps = await retryableTxn(async transaction => {
+  const apps = await directTxn(async transaction => {
     const { projectId } = await getAndVerifyProjectPermissions(req, transaction);
     const apps = await models.App.findAll({
       where: {

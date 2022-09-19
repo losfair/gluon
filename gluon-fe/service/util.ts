@@ -1,11 +1,14 @@
 import { GetServerSideProps, GetServerSidePropsResult } from "next"
 import { getAndVerifyProjectPermissions2, MissingTokenError, PermissionError } from "./error_wrapper";
 
-// Ensure initialization in the renderer context
+// Ensure initialization in SSR context
 import "./db";
-import { models } from "./db";
+import { directTxn, models } from "./db";
+import { InferAttributes } from "sequelize";
 
-export type ProjectProps = models.ProjectMember;
+export type ProjectProps = InferAttributes<models.ProjectMember> & {
+  project: InferAttributes<models.Project>,
+};
 
 export const loadProjectProps: GetServerSideProps = async (context): Promise<GetServerSidePropsResult<ProjectProps>> => {
   const projectId = context.params?.projectId;
@@ -15,30 +18,47 @@ export const loadProjectProps: GetServerSideProps = async (context): Promise<Get
     };
   }
 
-  let membership: models.ProjectMember;
+  return await directTxn(async transaction => {
+    let membership: models.ProjectMember;
 
-  try {
-    membership = await getAndVerifyProjectPermissions2(context.req, projectId, null);
-  } catch (e) {
-    if (e instanceof MissingTokenError) {
-      return {
-        redirect: {
-          destination: "/login",
-          permanent: false,
-        }
-      };
+    try {
+      membership = await getAndVerifyProjectPermissions2(context.req, projectId, transaction);
+    } catch (e) {
+      if (e instanceof MissingTokenError) {
+        return {
+          redirect: {
+            destination: "/login",
+            permanent: false,
+          }
+        };
+      }
+
+      if (e instanceof PermissionError) {
+        return {
+          notFound: true,
+        };
+      }
+
+      throw e;
     }
 
-    if (e instanceof PermissionError) {
+    const project = await models.Project.findOne({
+      where: {
+        id: projectId,
+      },
+      transaction,
+    });
+    if (!project) {
       return {
         notFound: true,
       };
     }
 
-    throw e;
-  }
-
-  return {
-    props: JSON.parse(JSON.stringify(membership)),
-  }
+    return {
+      props: {
+        ...membership.toJSON(),
+        project: project.toJSON(),
+      },
+    }
+  });
 }

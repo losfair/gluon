@@ -12,6 +12,7 @@
     "@nextui-org/react": "^1.0.0-beta.10",
     "ajv": "^8.11.0",
     "axios": "^0.27.2",
+    "js-base64": "^3.7.2",
     "next": "12.3.0",
     "next-auth": "^4.10.3",
     "nodemailer": "^6.7.8",

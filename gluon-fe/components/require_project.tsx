@@ -45,9 +45,9 @@ function ProjectInit({ message }: { message: string }) {
   return (
     <Container xs css={{ pt: 80 }}>
       <Row align="center" justify="center">
-        <Loading type="spinner" size="lg"></Loading>
+        <Loading size="lg"></Loading>
         <Spacer css={{ w: 16 }} />
-        <Text color="primary">{message}</Text>
+        <Text weight="semibold" color="primary">{message}</Text>
       </Row>
     </Container>
   )

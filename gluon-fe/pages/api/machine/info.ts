@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { models, retryableTxn } from "../../../service/db";
+import { models, directTxn } from "../../../service/db";
 import { checkProp_IsSafeInteger, getAndVerifyProjectPermissions, ResourceNotFoundError, wrapApiHandler } from '../../../service/error_wrapper';
 import { getMachineInfo, MachineInfo } from '../../../service/fly';
 
@@ -9,7 +9,7 @@ async function handler(
 ) {
   const id = checkProp_IsSafeInteger("id", req.body.id);
 
-  const machine = await retryableTxn(async transaction => {
+  const machine = await directTxn(async transaction => {
     const { projectId } = await getAndVerifyProjectPermissions(req, transaction);
     const machine = await models.Machine.findOne({
       where: {

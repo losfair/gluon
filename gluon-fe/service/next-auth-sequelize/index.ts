@@ -6,7 +6,7 @@ import type {
   VerificationToken,
 } from "next-auth/adapters"
 import { Sequelize, Model, ModelCtor } from "sequelize"
-import { retryableTxn } from "../db"
+import { directTxn, retryableTxn } from "../db"
 import * as defaultModels from "./models"
 
 export { defaultModels as models }
@@ -99,7 +99,7 @@ export default function SequelizeAdapter(
     async getUserByAccount({ provider, providerAccountId }) {
 
 
-      return await retryableTxn(async transaction => {
+      return await directTxn(async transaction => {
         const accountInstance = await Account.findOne({
           where: { provider, providerAccountId },
           transaction,
@@ -156,7 +156,7 @@ export default function SequelizeAdapter(
     async getSessionAndUser(sessionToken) {
 
 
-      return await retryableTxn(async transaction => {
+      return await directTxn(async transaction => {
         const sessionInstance = await Session.findOne({
           where: { sessionToken },
           transaction,

@@ -21,6 +21,7 @@ import { AppConfig } from '../../../../models/App'
 import { useAsync, useInterval } from 'react-use'
 import { MachineInfo } from '../../../../service/fly'
 import { useLatch } from '../../../../feutil/latch'
+import { BackToAllApps } from '../../../../components/back_to_all_apps'
 
 export const getServerSideProps = loadProjectProps;
 
@@ -58,7 +59,7 @@ const DeleteModal: React.FC<{ app: AppInfo, isOpen: boolean, busy: boolean, onCl
           Close
         </Button>
         <Button auto color="error" disabled={busy || name !== app.name} onClick={doDelete}>
-          {busy ? <Loading color="currentColor" size="sm" /> : "Confirm"}
+          {busy ? <Loading color="currentColor" size="sm" /> : "Delete"}
         </Button>
       </Modal.Footer>
     </Modal>
@@ -147,48 +148,45 @@ const SingleApp: NextPage<ProjectProps> = ({ projectId, userId }) => {
   }, [projectId, appId, router, appListRefresh]);
 
   return (
-    <RequireAuth>
-      <RequireProject>
-        <Container xs css={{ pt: 80 }}>
-          <Col>
-            <Row align="center">
-              <Col css={{ width: "auto" }}>
-                <Text h1 size={36}>Manage App</Text>
-              </Col>
-            </Row>
-            {!!appLatch && <>
-              <AppCard app={appLatch} inSingleAppPage />
-
-              {!!machine && !machineReady && <Row css={{ pt: 40 }}>
-                <Loading color="currentColor"></Loading>
-                <Text css={{ pl: 20 }} weight="semibold">Initializing</Text>
-                <InitializationWatcher machine={machine} />
-              </Row>}
-
-
-              {machineReady && <Row css={{ pt: 40 }}>
-                <MemoMachineStateCard machine={machine!} />
-              </Row>}
-
-              <Col css={{ pt: 40 }}>
-                <Collapse.Group accordion={false} css={{ px: 0 }}>
-                  <Collapse title="App Config">
-                    <MemoConfigEditor readonly spec={appLatch.spec} initialConfig={appLatch.config} buildConfigRef={buildConfigRef} />
-                  </Collapse>
-                  <Collapse title="Danger Zone">
-                    <Row>
-                      <Button color="error" onClick={() => setDeleteOpen(true)}>Delete App</Button>
-                    </Row>
-                  </Collapse>
-                </Collapse.Group>
-              </Col>
-              <MemoDeleteModal app={appLatch} isOpen={deleteOpen} busy={deleteBusy} onClose={closeDelete} doDelete={doDelete} />
-            </>}
+    <Container xs css={{ pt: 80 }}>
+      <BackToAllApps projectId={projectId} />
+      <Col>
+        <Row align="center">
+          <Col css={{ width: "auto" }}>
+            <Text h1 size={36}>Manage App</Text>
           </Col>
-          <Footer projectId={projectId} userId={userId} />
-        </Container>
-      </RequireProject>
-    </RequireAuth>
+        </Row>
+        {!!appLatch && <>
+          <AppCard app={appLatch} inSingleAppPage />
+
+          {!!machine && !machineReady && <Row css={{ pt: 40 }}>
+            <Loading color="currentColor"></Loading>
+            <Text css={{ pl: 20 }} weight="semibold">Initializing</Text>
+            <InitializationWatcher machine={machine} />
+          </Row>}
+
+
+          {machineReady && <Row css={{ pt: 40 }}>
+            <MemoMachineStateCard machine={machine!} />
+          </Row>}
+
+          <Col css={{ pt: 40 }}>
+            <Collapse.Group accordion={false} css={{ px: 0 }}>
+              <Collapse title="App Config">
+                <MemoConfigEditor readonly spec={appLatch.spec} initialConfig={appLatch.config} buildConfigRef={buildConfigRef} />
+              </Collapse>
+              <Collapse title="Danger Zone">
+                <Row>
+                  <Button color="error" onClick={() => setDeleteOpen(true)}>Delete App</Button>
+                </Row>
+              </Collapse>
+            </Collapse.Group>
+          </Col>
+          <MemoDeleteModal app={appLatch} isOpen={deleteOpen} busy={deleteBusy} onClose={closeDelete} doDelete={doDelete} />
+        </>}
+      </Col>
+      <Footer projectId={projectId} userId={userId} />
+    </Container>
   )
 }
 

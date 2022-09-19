@@ -49,3 +49,7 @@ export async function retryableTxn<T>(fn: (txn: Transaction) => Promise<T>): Pro
     return ret;
   }
 }
+
+export async function directTxn<T>(fn: (txn: Transaction) => Promise<T>): Promise<T> {
+  return await sequelize.transaction(fn);
+}

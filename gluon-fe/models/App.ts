@@ -52,6 +52,7 @@ export interface AppSpec {
     regex?: string | null;
     hidden?: boolean | null;
     type?: "text" | "switch" | "secret" | null;
+    generate?: "random-base64-16" | "random-base64-24" | "random-base64-32" | null;
   }> | null;
   s3?: Record<string, {
     description?: string | null;
@@ -83,6 +84,7 @@ export const AppSpec_schema: JSONSchemaType<AppSpec> = {
           regex: { type: "string", nullable: true },
           hidden: { type: "boolean", nullable: true },
           type: { type: "string", enum: ["text", "switch", "secret"], nullable: true },
+          generate: { type: "string", enum: ["random-base64-16", "random-base64-24", "random-base64-32"], nullable: true },
         },
         additionalProperties: false,
       },

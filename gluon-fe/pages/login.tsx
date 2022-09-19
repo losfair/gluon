@@ -1,5 +1,5 @@
 import { getCsrfToken, signIn, useSession } from "next-auth/react"
-import { Container, Row, Col, Card, Text, Input, Button, Spacer, Loading } from '@nextui-org/react';
+import { Container, Row, Col, Card, Text, Input, Button, Spacer, Loading, Link } from '@nextui-org/react';
 import { useCallback, useState } from "react";
 
 export default function Login() {
@@ -42,6 +42,15 @@ export default function Login() {
               {loading ? <Loading color="currentColor" size="sm" /> : "Continue"}</Button>
           </Row>
         </form>
+
+        <Text color="gray">
+          Gluon is in Technical Preview and is currently available to people I follow on GitHub.
+          Please sign in using the public email address on your profile.
+        </Text>
+
+        <Text color="gray" css={{ pt: 20 }}>
+          Sorry for the inconvenience. Meanwhile, you can <Link style={{ display: "inline" }} href="https://github.com/losfair/gluon" target="_blank">host your own Gluon instance</Link>.
+        </Text>
       </Col>
     </Container>
   )
