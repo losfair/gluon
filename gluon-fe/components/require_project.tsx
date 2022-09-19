@@ -29,7 +29,8 @@ function RequireProjectInner({ children }: { children: React.ReactNode }) {
   useAsync(async () => {
     if (projectList.length === 0 && !firstProjectCreated) {
       firstProjectCreated = true;
-      await loadJson("/api/project/create", { name: "personal-project" });
+      const suffix = Math.floor(Math.random() * 0x100000000).toString(16).padStart(8, "0");
+      await loadJson("/api/project/create", { name: `project-${suffix}` });
       refresh();
     }
   }, [projectList.length]);

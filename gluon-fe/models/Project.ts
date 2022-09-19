@@ -1,6 +1,6 @@
 import { DataTypes } from "sequelize";
 import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
-import { AllowNull, BelongsToMany, Column, HasMany, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
+import { AllowNull, BelongsToMany, Column, HasMany, Is, IsLowercase, Length, Max, Min, Model, PrimaryKey, Table, Validate } from "sequelize-typescript"
 import ProjectMember from "./ProjectMember";
 
 @Table({
@@ -11,13 +11,16 @@ export default class Project extends Model<InferAttributes<Project>, InferCreati
   @Column
   id: string;
 
-  @IsLowercase
-  @Length({ min: 4, max: 100 })
+  @Is(/^[a-z0-9-]+$/)
+  @Length({ min: 4, max: 50 })
   @Column
   name: string;
 
   @Column(DataTypes.INTEGER)
   lastResourceId: CreationOptional<number>;
+
+  @Column(DataTypes.INTEGER)
+  maxNumberOfApps: CreationOptional<number>;
 
   @Column(DataTypes.INTEGER)
   createdAt: CreationOptional<number>;

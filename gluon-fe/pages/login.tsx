@@ -44,12 +44,11 @@ export default function Login() {
         </form>
 
         <Text color="gray">
-          Gluon is in Technical Preview and is currently available to people I follow on GitHub.
-          Please sign in using the public email address on your profile.
+          This Gluon instance is not public.
         </Text>
 
         <Text color="gray" css={{ pt: 20 }}>
-          Sorry for the inconvenience. Meanwhile, you can <Link style={{ display: "inline" }} href="https://github.com/losfair/gluon" target="_blank">host your own Gluon instance</Link>.
+          Meanwhile, you can <Link style={{ display: "inline" }} href="https://github.com/losfair/gluon" target="_blank">host your own Gluon instance</Link>.
         </Text>
       </Col>
     </Container>

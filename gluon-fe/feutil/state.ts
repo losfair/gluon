@@ -21,14 +21,6 @@ export const projectSelector = selectorFamily<ProjectInfo | null, string>({
   }
 });
 
-export const firstProjectSelector = selector<ProjectInfo | null>({
-  key: "firstProjectSelector",
-  get: ({ get }) => {
-    const projects = get(projectListQuery);
-    return projects.length > 0 ? projects[0] : null;
-  }
-});
-
 export const appListQuery = selectorFamily<AppInfo[], string>({
   key: "appListQuery",
   get: projectId => async () => await loadJson<AppInfo[]>("/api/app/list", {

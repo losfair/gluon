@@ -3,14 +3,15 @@ import loading from '@nextui-org/react/types/loading'
 import type { NextPage } from 'next'
 import { useSession } from 'next-auth/react'
 import dynamic from 'next/dynamic'
-import { useRecoilValue, useRecoilValueLoadable } from 'recoil'
+import { useRecoilValueLoadable } from 'recoil'
+import { ProjectCard } from '../components/project_card'
 import { RequireAuth } from '../components/require_auth'
 import { RequireProject } from '../components/require_project'
-import { firstProjectSelector } from '../feutil/state'
+import { projectListQuery } from '../feutil/state'
 
 const Dashboard: NextPage = () => {
   const { data: session, status } = useSession();
-  const project = useRecoilValueLoadable(firstProjectSelector);
+  const projectList = useRecoilValueLoadable(projectListQuery);
 
   return (
     <RequireAuth>
@@ -33,9 +34,11 @@ const Dashboard: NextPage = () => {
                 </Card>
               </Row>
             )}
-            {project.state === "hasValue" && <>
-              <pre>{JSON.stringify(project.contents!, null, 2)}</pre>
-            </>}
+            {projectList.state === "hasValue" && (
+              <>
+                {projectList.contents.map(project => <ProjectCard key={project.project.id} project={project.project} />)}
+              </>
+            )}
           </Col>
         </Container>
       </RequireProject>

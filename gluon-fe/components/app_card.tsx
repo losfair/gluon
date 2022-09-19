@@ -20,7 +20,7 @@ const AppCardRow: React.FC<{ app: AppInfo, inSingleAppPage?: boolean }> = ({ app
   return (
     <Row
       key={app.id}
-      css={{ align: "center", h: "100%", "&:hover": inSingleAppPage ? {} : { cursor: "pointer" } }}
+      css={{ align: "center", h: "100%" }}
       align="center">
       {!!app.spec.icon && <Col css={{ width: "auto", pl: 16 }}><Image width={60} height={60} src={app.spec.icon} /></Col>}
       <Col css={{ flexGrow: 1, width: "auto", pl: 16 }}>
