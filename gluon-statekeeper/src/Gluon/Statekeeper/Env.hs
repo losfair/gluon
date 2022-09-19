@@ -18,6 +18,7 @@ module Gluon.Statekeeper.Env
     flyMachineApiPort,
     flyMachineApiToken,
     flyMachineAppName,
+    flyMachineCreationRegion,
   )
 where
 
@@ -40,7 +41,8 @@ data FlyConfig = FlyConfig
   { _flyMachineApiHostname :: Text,
     _flyMachineApiPort :: Int,
     _flyMachineApiToken :: Text,
-    _flyMachineAppName :: Text
+    _flyMachineAppName :: Text,
+    _flyMachineCreationRegion :: Maybe Text
   }
 
 makeLenses ''GenericEnv

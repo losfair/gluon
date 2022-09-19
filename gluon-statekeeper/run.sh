@@ -10,4 +10,5 @@ LD_PRELOAD=~/Projects/mvsqlite/mvsqlite-preload/libmvsqlite_preload.so LD_LIBRAR
     FLY_MACHINE_API_PORT=4280 \
     FLY_MACHINE_API_TOKEN=$(cat ~/.fly/token) \
     FLY_MACHINE_APP_NAME=boson-test \
+    FLY_MACHINE_CREATION_REGION=sjc \
     stack exec gluon-statekeeper-exe

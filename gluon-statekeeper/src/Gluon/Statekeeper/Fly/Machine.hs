@@ -21,6 +21,7 @@ import Gluon.Statekeeper.Env
     flyMachineApiPort,
     flyMachineApiToken,
     flyMachineAppName,
+    flyMachineCreationRegion,
   )
 import Gluon.Util.Http (isStatusCodeException)
 import Lens.Micro.TH (makeLenses)
@@ -45,6 +46,7 @@ data GuestAllocation = GuestAllocation
 
 data CreateMachinePayload = CreateMachinePayload
   { _cmpName :: Text,
+    _cmpRegion :: Maybe Text,
     _cmpConfig :: MachineConfig
   }
   deriving (Generic)
@@ -128,7 +130,7 @@ spinUp config name ms = do
   res :: Either HttpException (JsonResponse MachineInfo) <-
     try $
       runReq defaultHttpConfig $
-        req POST (http apiHostname /: "v1" /: "apps" /: appName /: "machines") (ReqBodyJson $ CreateMachinePayload name ms) jsonResponse $
+        req POST (http apiHostname /: "v1" /: "apps" /: appName /: "machines") (ReqBodyJson $ CreateMachinePayload name (config ^. flyMachineCreationRegion) ms) jsonResponse $
           reqScheme config
   case res of
     Left exc -> do

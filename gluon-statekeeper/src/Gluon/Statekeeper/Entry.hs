@@ -1,10 +1,10 @@
 module Gluon.Statekeeper.Entry (run) where
 
+import Data.Text.Read (decimal)
+import qualified Database.SQLite.Simple as S
 import Gluon.Statekeeper.Env
 import qualified Gluon.Statekeeper.ProjectWorker.Manager as Manager
 import Gluon.Util.Exception (fromJustOrThrow)
-import Data.Text.Read (decimal)
-import qualified Database.SQLite.Simple as S
 import RIO
 import RIO.Lens (non)
 import RIO.List.Partial (head)
@@ -56,6 +56,7 @@ resolveConfig = do
       & fmap (fst . (fromRight (error "invalid FLY_MACHINE_API_PORT") . decimal) . fromMaybe "4280")
   !flyMachineApiToken_ <- lookupEnvFromContext "FLY_MACHINE_API_TOKEN" >>= fromJustOrThrow "FLY_MACHINE_API_TOKEN is not set"
   !flyMachineAppName_ <- lookupEnvFromContext "FLY_MACHINE_APP_NAME" >>= fromJustOrThrow "FLY_MACHINE_APP_NAME is not set"
+  !flyMachineCreationRegion_ <- lookupEnvFromContext "FLY_MACHINE_CREATION_REGION"
   logLevelStr <- (^. non "LevelInfo") <$> lookupEnvFromContext "GLUON_LOG_LEVEL"
   !(logLevel_ :: LogLevel) <- fromJustOrThrow ("Invalid log level: " <> logLevelStr) $ readMaybe $ unpack logLevelStr
   let appConfig =
@@ -66,7 +67,8 @@ resolveConfig = do
                 { _flyMachineApiHostname = flyMachineApiHostname_,
                   _flyMachineApiPort = flyMachineApiPort_,
                   _flyMachineApiToken = flyMachineApiToken_,
-                  _flyMachineAppName = flyMachineAppName_
+                  _flyMachineAppName = flyMachineAppName_,
+                  _flyMachineCreationRegion = flyMachineCreationRegion_
                 }
           }
   pure
